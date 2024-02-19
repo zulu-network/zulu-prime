@@ -27,10 +27,10 @@ vm=info,\
 zksync_object_store=info,\
 zksync_external_node=info,\
 zksync_witness_generator=info,\
-zksync_prover_fri=info,\
+zksync_prover_fri=debug,\
 zksync_witness_vector_generator=info,\
 zksync_health_check=debug,\
-zksync_proof_fri_compressor=info,\
+zksync_proof_fri_compressor=debug,\
 vise_exporter=debug,\
 snapshots_creator=debug,\
 """
