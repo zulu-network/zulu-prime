@@ -145,7 +145,8 @@ pub fn verify_proof(
         ),
     };
 
-    METRICS.proof_verification_time[&circuit_id.to_string()].observe(started_at.elapsed());
+    let cost = started_at.elapsed();
+    METRICS.proof_verification_time[&circuit_id.to_string()].observe(cost);
 
     if !is_valid {
         let msg = format!(
@@ -153,6 +154,12 @@ pub fn verify_proof(
         );
         tracing::error!("{}", msg);
         panic!("{}", msg);
+    } else{
+        tracing::info!(
+        "Successfully verify fri proof, job: {}, verify time taken: {:?}",
+        job_id,
+        cost
+    );
     }
 }
 
