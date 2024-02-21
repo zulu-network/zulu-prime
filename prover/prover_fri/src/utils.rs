@@ -154,12 +154,12 @@ pub fn verify_proof(
         );
         tracing::error!("{}", msg);
         panic!("{}", msg);
-    } else{
+    } else {
         tracing::info!(
-        "Successfully verify fri proof, job: {}, verify time taken: {:?}",
-        job_id,
-        cost
-    );
+            "Successfully verify fri proof, job: {}, verify time taken: {:?}",
+            job_id,
+            cost
+        );
     }
 }
 
@@ -188,6 +188,7 @@ pub fn get_setup_data_key(key: ProverServiceDataKey) -> ProverServiceDataKey {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn test_get_setup_data_key_for_node_agg_key() {
