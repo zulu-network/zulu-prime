@@ -5,10 +5,10 @@
 network="localhost"
 # Name of current zkSync network
 # Used for Sentry environment
-zksync_network="localhost"
+zksync_network="ZuluPrime"
 # ID of current zkSync network treated as ETH network ID.
 # Used to distinguish zkSync from other Web3-capable networks.
-zksync_network_id=270
+zksync_network_id=090104
 
 [chain.state_keeper]
 fee_account_addr="0xde03a0B5963f75f1C8485B355fF6D30f3093BDE7"
