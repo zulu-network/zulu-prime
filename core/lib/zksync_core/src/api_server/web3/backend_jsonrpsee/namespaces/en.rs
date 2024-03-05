@@ -1,10 +1,10 @@
-use zksync_types::{api::en::SyncBlock, MiniblockNumber};
+use zksync_types::{api::en::SyncBlock, tokens::TokenInfo, MiniblockNumber};
 use zksync_web3_decl::{
     jsonrpsee::core::{async_trait, RpcResult},
     namespaces::en::EnNamespaceServer,
 };
 
-use crate::api_server::web3::{backend_jsonrpsee::into_jsrpc_error, namespaces::EnNamespace};
+use crate::api_server::web3::namespaces::EnNamespace;
 
 #[async_trait]
 impl EnNamespaceServer for EnNamespace {
@@ -15,6 +15,15 @@ impl EnNamespaceServer for EnNamespace {
     ) -> RpcResult<Option<SyncBlock>> {
         self.sync_l2_block_impl(block_number, include_transactions)
             .await
-            .map_err(into_jsrpc_error)
+            .map_err(|err| self.current_method().map_err(err))
+    }
+
+    async fn sync_tokens(
+        &self,
+        block_number: Option<MiniblockNumber>,
+    ) -> RpcResult<Vec<TokenInfo>> {
+        self.sync_tokens_impl(block_number)
+            .await
+            .map_err(|err| self.current_method().map_err(err))
     }
 }
