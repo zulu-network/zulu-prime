@@ -8,7 +8,7 @@ use tokio::{
     time::{interval, Duration},
 };
 use zksync_dal::ConnectionPool;
-use zksync_types::{MiniblockNumber, H128, H256};
+use zksync_types::{L1BatchNumber, MiniblockNumber, H128, H256};
 use zksync_web3_decl::{
     jsonrpsee::{
         core::{server::SubscriptionMessage, SubscriptionResult},
@@ -45,6 +45,7 @@ pub(super) enum PubSubEvent {
     Subscribed(SubscriptionType),
     NotifyIterationFinished(SubscriptionType),
     MiniblockAdvanced(SubscriptionType, MiniblockNumber),
+    L1BatchAdvanced(SubscriptionType, L1BatchNumber),
 }
 
 /// Manager of notifications for a certain type of subscriptions.
@@ -213,6 +214,42 @@ impl PubSubNotifier {
             .await
             .context("events_web3_dal().get_all_logs()")
     }
+
+    async fn notify_l1_batch_proofs(self, stop_receiver: watch::Receiver<bool>) -> anyhow::Result<()> {
+        let mut timer = interval(self.polling_interval);
+        loop {
+            if *stop_receiver.borrow() {
+                tracing::info!("Stop signal received, pubsub_l1batch_proofs_notifier is shutting down");
+                break;
+            }
+            timer.tick().await;
+
+            let db_latency = PUB_SUB_METRICS.db_poll_latency[&SubscriptionType::L1BatchProofs].start();
+            let new_proofs = self.new_l1_batch_proofs().await?;
+            db_latency.observe();
+            // TODO: update proof struct
+            if let Some(last_proof) = new_proofs.last() {
+                let last_batch_number = L1BatchNumber(1);
+                let new_proofs = new_proofs
+                    .into_iter()
+                    .map(PubSubResult::L1BatchProof)
+                    .collect();
+                self.send_pub_sub_results(new_proofs, SubscriptionType::L1BatchProofs);
+                self.emit_event(PubSubEvent::L1BatchAdvanced(
+                    SubscriptionType::L1BatchProofs,
+                    last_batch_number,
+                ));
+            }
+            self.emit_event(PubSubEvent::NotifyIterationFinished(
+                SubscriptionType::L1BatchProofs,
+            ));
+        }
+        Ok(())
+    }
+
+    async fn new_l1_batch_proofs(&self) -> anyhow::Result<Vec<bool>> {
+        Ok(vec![true, false, true, false])
+    }
 }
 
 /// Subscription support for Web3 APIs.
@@ -220,6 +257,7 @@ pub(super) struct EthSubscribe {
     blocks: broadcast::Sender<Vec<PubSubResult>>,
     transactions: broadcast::Sender<Vec<PubSubResult>>,
     logs: broadcast::Sender<Vec<PubSubResult>>,
+    l1_batch_proofs: broadcast::Sender<Vec<PubSubResult>>,
     events_sender: Option<mpsc::UnboundedSender<PubSubEvent>>,
 }
 
@@ -228,11 +266,13 @@ impl EthSubscribe {
         let (blocks, _) = broadcast::channel(BROADCAST_CHANNEL_CAPACITY);
         let (transactions, _) = broadcast::channel(BROADCAST_CHANNEL_CAPACITY);
         let (logs, _) = broadcast::channel(BROADCAST_CHANNEL_CAPACITY);
+        let (l1_batch_proofs, _) = broadcast::channel(BROADCAST_CHANNEL_CAPACITY);
 
         Self {
             blocks,
             transactions,
             logs,
+            l1_batch_proofs,
             events_sender: None,
         }
     }
@@ -399,6 +439,20 @@ impl EthSubscribe {
                 });
                 None
             }
+            "l1_batch_proofs" => {
+                let Ok(sink) = pending_sink.accept().await else {
+                    return;
+                };
+                let l1_batch_proofs_rx = self.l1_batch_proofs.subscribe();
+                tokio::spawn(Self::run_subscriber(
+                    sink,
+                    SubscriptionType::L1BatchProofs,
+                    l1_batch_proofs_rx,
+                    None,
+                ));
+
+                Some(SubscriptionType::L1BatchProofs)
+            }
             _ => {
                 Self::reject(pending_sink).await;
                 None
@@ -446,8 +500,17 @@ impl EthSubscribe {
             events_sender: self.events_sender.clone(),
         };
         let notifier_task = tokio::spawn(notifier.notify_logs(stop_receiver));
-
         notifier_tasks.push(notifier_task);
+
+        let notifier = PubSubNotifier {
+            sender: self.l1_batch_proofs.clone(),
+            connection_pool,
+            polling_interval,
+            events_sender: self.events_sender.clone(),
+        };
+        let notifier_task = tokio::spawn(notifier.notify_l1_batch_proofs(stop_receiver));
+        notifier_tasks.push(notifier_task);
+
         notifier_tasks
     }
 }

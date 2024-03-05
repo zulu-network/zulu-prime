@@ -179,6 +179,7 @@ pub(super) enum SubscriptionType {
     Blocks,
     Txs,
     Logs,
+    L1BatchProofs,
 }
 
 #[derive(Debug, Metrics)]
