@@ -46,6 +46,7 @@ mod instrument;
 mod metrics;
 mod models;
 pub mod proof_generation_dal;
+pub mod proof_offchain_verification_dal;
 pub mod protocol_versions_dal;
 pub mod protocol_versions_web3_dal;
 pub mod snapshot_recovery_dal;
