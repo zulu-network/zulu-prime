@@ -1,5 +1,6 @@
 //! Data access layer (DAL) for zkSync Era.
 
+use proof_offchain_verification_dal::ProofVerificationDal;
 pub use sqlx::{types::BigDecimal, Error as SqlxError};
 
 pub use crate::connection::{ConnectionPool, StorageProcessor};
@@ -166,6 +167,10 @@ impl<'a> StorageProcessor<'a> {
 
     pub fn proof_generation_dal(&mut self) -> ProofGenerationDal<'_, 'a> {
         ProofGenerationDal { storage: self }
+    }
+
+    pub fn proof_verification_dal(&mut self) -> ProofVerificationDal<'_, 'a> {
+        ProofVerificationDal { storage: self }
     }
 
     pub fn fri_gpu_prover_queue_dal(&mut self) -> FriGpuProverQueueDal<'_, 'a> {

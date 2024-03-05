@@ -220,6 +220,12 @@ impl RequestProcessor {
                     .save_proof_artifacts_metadata(l1_batch_number, &blob_url)
                     .await
                     .map_err(RequestProcessorError::Sqlx)?;
+
+                storage
+                    .proof_verification_dal()
+                    .insert_l1_batch_to_be_verified(l1_batch_number)
+                    .await
+                    .map_err(RequestProcessorError::Sqlx)?;
             }
             SubmitProofRequest::SkippedProofGeneration => {
                 self.pool
