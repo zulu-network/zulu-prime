@@ -9,8 +9,10 @@ enum ProofVerificationStatus {
     ReadyToBeVerified,
     #[strum(serialize = "picked_by_offchain_verifier")]
     PickedByOffChainVerifier,
-    #[strum(serialize = "offchain_verified")]
-    OffChainVerified,
+    #[strum(serialize = "offchain_verify_passed")]
+    OffChainVerifyPassed,
+    #[strum(serialize = "offchain_verify_failed")]
+    OffChainVerifyFailed,
 }
 
 #[derive(Debug)]
@@ -45,7 +47,13 @@ impl ProofVerificationDal<'_, '_> {
     pub async fn mark_l1_batch_as_verified(
         &mut self,
         block_number: L1BatchNumber,
+        is_passed: bool,
     ) -> Result<(), SqlxError> {
+        let status = if is_passed {
+            ProofVerificationStatus::OffChainVerifyPassed.to_string()
+        } else {
+            ProofVerificationStatus::OffChainVerifyFailed.to_string()
+        };
         sqlx::query!(
             r#"
             UPDATE proof_offchain_verification_details
@@ -55,7 +63,7 @@ impl ProofVerificationDal<'_, '_> {
             WHERE
                 l1_batch_number = $2
             "#,
-            ProofVerificationStatus::OffChainVerified.to_string(),
+            status,
             block_number.0 as i64,
         )
         .execute(self.storage.conn())
@@ -70,13 +78,14 @@ impl ProofVerificationDal<'_, '_> {
         let row = sqlx::query!(
             r#"
             SELECT
-                MAX(l1_batch_number) AS "number"
+            COALESCE(MAX(l1_batch_number), 0) AS "number"
             FROM
                 proof_offchain_verification_details
             WHERE
-                status = $1
+                status IN ($1, $2)
             "#,
-            ProofVerificationStatus::OffChainVerified.to_string(),
+            ProofVerificationStatus::OffChainVerifyPassed.to_string(),
+            ProofVerificationStatus::OffChainVerifyFailed.to_string(),
         )
         .instrument("get_last_l1_batch_verified")
         .report_latency()
