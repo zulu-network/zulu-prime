@@ -74,11 +74,11 @@ impl ProofVerificationDal<'_, '_> {
         .ok_or(sqlx::Error::RowNotFound)
     }
 
-    pub async fn get_last_l1_batch_verified(&mut self) -> Option<L1BatchNumber> {
+    pub async fn get_last_l1_batch_verified(&mut self) -> sqlx::Result<L1BatchNumber> {
         let row = sqlx::query!(
             r#"
             SELECT
-            COALESCE(MAX(l1_batch_number), 0) AS "number"
+            COALESCE(MAX(l1_batch_number), 0) AS "number!"
             FROM
                 proof_offchain_verification_details
             WHERE
@@ -92,6 +92,6 @@ impl ProofVerificationDal<'_, '_> {
         .fetch_one(self.storage)
         .await?;
 
-        Ok(row.number.map(|num| L1BatchNumber(num as u32)))
+        Ok(L1BatchNumber(row.number as u32))
     }
 }
