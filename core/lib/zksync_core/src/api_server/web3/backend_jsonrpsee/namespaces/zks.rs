@@ -167,4 +167,10 @@ impl ZksNamespaceServer for ZksNamespace {
             .await
             .map_err(|err| self.current_method().map_err(err))
     }
+
+    async fn post_verification_result(&self, verify_result: OffChainVerificationResult) -> RpcResult<bool> {
+        self.post_verification_result_impl(verify_result)
+            .await
+            .map_err(into_jsrpc_error)
+    }
 }

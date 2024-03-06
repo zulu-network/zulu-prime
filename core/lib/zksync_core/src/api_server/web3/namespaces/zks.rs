@@ -14,6 +14,7 @@ use zksync_types::{
     l1::L1Tx,
     l2::L2Tx,
     l2_to_l1_log::{l2_to_l1_logs_tree_size, L2ToL1Log},
+    proof_offchain_verification::OffChainVerificationResult,
     tokens::ETHEREUM_ADDRESS,
     transaction_request::CallRequest,
     utils::storage_key_for_standard_token_balance,
@@ -529,5 +530,18 @@ impl ZksNamespace {
             address,
             storage_proof,
         })
+    }
+
+    #[tracing::instrument(skip_all)]
+    pub async fn post_verification_result_impl(&self, verify_result: OffChainVerificationResult) -> Result<bool, Web3Error> {
+        let mut storage = self.access_storage().await?;
+        let l1_batch_number = L1BatchNumber(verify_result.l1_batch_number);
+        storage
+            .proof_verification_dal()
+            .mark_l1_batch_as_verified(l1_batch_number, verify_result.is_passed)
+            .await
+            .map_err(|err| internal_error(METHOD_NAME, err))?;
+
+        Ok(true)
     }
 }

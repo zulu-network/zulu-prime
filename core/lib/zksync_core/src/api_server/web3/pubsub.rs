@@ -24,7 +24,7 @@ use super::{
     metrics::{SubscriptionType, PUB_SUB_METRICS},
     namespaces::eth::EVENT_TOPIC_NUMBER_LIMIT,
 };
-use crate::api_server::execution_sandbox::BlockStartInfo;
+use crate::{api_server::execution_sandbox::BlockStartInfo, eth_sender::Aggregator};
 
 const BROADCAST_CHANNEL_CAPACITY: usize = 1024;
 const SUBSCRIPTION_SINK_SEND_TIMEOUT: Duration = Duration::from_secs(1);
@@ -55,6 +55,7 @@ struct PubSubNotifier {
     connection_pool: ConnectionPool,
     polling_interval: Duration,
     events_sender: Option<mpsc::UnboundedSender<PubSubEvent>>,
+    blob_store: Option<Arc<dyn ObjectStore>>,
 }
 
 impl PubSubNotifier {
@@ -227,7 +228,7 @@ impl PubSubNotifier {
             let db_latency = PUB_SUB_METRICS.db_poll_latency[&SubscriptionType::L1BatchProofs].start();
             let new_proofs = self.new_l1_batch_proofs().await?;
             db_latency.observe();
-            // TODO: update proof struct
+
             if let Some(last_proof) = new_proofs.last() {
                 let last_batch_number = L1BatchNumber(1);
                 let new_proofs = new_proofs
@@ -258,6 +259,73 @@ impl PubSubNotifier {
         //     .context("events_web3_dal().get_all_logs()")
         Ok(vec![true, false])
     }
+
+    // async fn new_l1_batch_proofs(&self) -> Option<ProveBatches> {
+    //     let mut storage = self.connection_pool
+    //         .access_storage_tagged("api")
+    //         .await
+    //         .context("access_storage_tagged")?;
+    //     let blob_store = self.blob_store.expect("blob_store not specified");
+    //     Self::load_proof_for_offchain_verify(&mut storage, blob_store)
+
+    // }
+
+    // async fn load_proof_for_offchain_verify(
+    //     storage: &mut StorageProcessor<'_>,
+    //     blob_store: &dyn ObjectStore,
+    // ) -> Option<ProveBatches> {
+    //     let previous_verified_batch_number = storage
+    //         .proof_verification_dal()
+    //         .get_last_l1_batch_verified()
+    //         .await
+    //         .context("proof_verification_dal().get_last_l1_batch_verified()");
+    //     let l1_batch_to_verify = previous_verified_batch_number + 1;
+
+    //     let mut proofs = Vec::new();
+
+    //     match blob_store.get(l1_batch_to_verify).await {
+    //         Ok(proof) => proofs.push(proof),
+    //         Err(ObjectStoreError::KeyNotFound(_)) => return None,
+    //         Err(err) => panic!(
+    //             "Failed to load proof for batch {}: {}",
+    //             l1_batch_to_verify.0, err
+    //         ),
+    //     }
+    //     if proofs.is_empty() {
+    //         // The proof for the next L1 batch is not generated yet
+    //         return None;
+    //     }
+
+    //     let previous_proven_batch_metadata = storage
+    //         .blocks_dal()
+    //         .get_l1_batch_metadata(previous_verified_batch_number)
+    //         .await
+    //         .unwrap()
+    //         .unwrap_or_else(|| {
+    //             panic!(
+    //                 "L1 batch #{} with submitted proof is not complete in the DB",
+    //                 previous_verified_batch_number
+    //             );
+    //         });
+    //     let metadata_for_batch_being_proved = storage
+    //         .blocks_dal()
+    //         .get_l1_batch_metadata(previous_verified_batch_number + 1)
+    //         .await
+    //         .unwrap()
+    //         .unwrap_or_else(|| {
+    //             panic!(
+    //                 "L1 batch #{} with generated proof is not complete in the DB",
+    //                 previous_proven_batch_number + 1
+    //             );
+    //         });
+
+    //     Some(ProveBatches {
+    //         prev_l1_batch: previous_proven_batch_metadata,
+    //         l1_batches: vec![metadata_for_batch_being_proved],
+    //         proofs,
+    //         should_verify: true,
+    //     })
+    // }
 }
 
 /// Subscription support for Web3 APIs.
@@ -479,6 +547,7 @@ impl EthSubscribe {
         &self,
         connection_pool: ConnectionPool,
         polling_interval: Duration,
+        blob_store: Arc<dyn ObjectStore>,
         stop_receiver: watch::Receiver<bool>,
     ) -> Vec<JoinHandle<anyhow::Result<()>>> {
         let mut notifier_tasks = Vec::with_capacity(3);
@@ -488,6 +557,7 @@ impl EthSubscribe {
             connection_pool: connection_pool.clone(),
             polling_interval,
             events_sender: self.events_sender.clone(),
+            blob_store: None,
         };
         let notifier_task = tokio::spawn(notifier.notify_blocks(stop_receiver.clone()));
         notifier_tasks.push(notifier_task);
@@ -497,6 +567,7 @@ impl EthSubscribe {
             connection_pool: connection_pool.clone(),
             polling_interval,
             events_sender: self.events_sender.clone(),
+            blob_store: None,
         };
         let notifier_task = tokio::spawn(notifier.notify_txs(stop_receiver.clone()));
         notifier_tasks.push(notifier_task);
@@ -506,6 +577,7 @@ impl EthSubscribe {
             connection_pool,
             polling_interval,
             events_sender: self.events_sender.clone(),
+            blob_store: None,
         };
         let notifier_task = tokio::spawn(notifier.notify_logs(stop_receiver));
         notifier_tasks.push(notifier_task);
@@ -515,6 +587,7 @@ impl EthSubscribe {
             connection_pool,
             polling_interval,
             events_sender: self.events_sender.clone(),
+            blob_store: Some(blob_store),
         };
         let notifier_task = tokio::spawn(notifier.notify_l1_batch_proofs(stop_receiver));
         notifier_tasks.push(notifier_task);

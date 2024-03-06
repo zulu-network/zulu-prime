@@ -11,6 +11,7 @@ use tokio::{
 use tower_http::{cors::CorsLayer, metrics::InFlightRequestsLayer};
 use zksync_dal::ConnectionPool;
 use zksync_health_check::{HealthStatus, HealthUpdater, ReactiveHealthCheck};
+use zksync_object_store::ObjectStore;
 use zksync_types::MiniblockNumber;
 use zksync_web3_decl::{
     jsonrpsee::{
@@ -132,6 +133,7 @@ pub struct ApiServer {
     polling_interval: Duration,
     namespaces: Vec<Namespace>,
     method_tracer: Arc<MethodTracer>,
+    blob_store: Option<Arc<dyn ObjectStore>>,
     optional: OptionalApiParams,
 }
 
@@ -148,6 +150,7 @@ pub struct ApiBuilder {
     // specially because we want to output a warning if they are not set.
     namespaces: Option<Vec<Namespace>>,
     method_tracer: Arc<MethodTracer>,
+    blob_store: Option<Arc<dyn ObjectStore>>,
     optional: OptionalApiParams,
 }
 
@@ -164,6 +167,7 @@ impl ApiBuilder {
             tx_sender: None,
             namespaces: None,
             method_tracer: Arc::new(MethodTracer::default()),
+            blob_store: None,
             optional: OptionalApiParams::default(),
         }
     }
@@ -194,6 +198,11 @@ impl ApiBuilder {
 
     pub fn with_vm_barrier(mut self, vm_barrier: VmConcurrencyBarrier) -> Self {
         self.optional.vm_barrier = Some(vm_barrier);
+        self
+    }
+
+    pub fn with_blob_store(mut self, blob_store: Arc<dyn ObjectStore>) -> Self {
+        self.blob_store = Some(blob_store);
         self
     }
 
@@ -283,6 +292,7 @@ impl ApiBuilder {
                 Namespace::DEFAULT.to_vec()
             }),
             method_tracer: self.method_tracer,
+            blob_store: self.blob_store,
             optional: self.optional,
         })
     }
@@ -452,6 +462,7 @@ impl ApiServer {
             tasks.extend(pub_sub.spawn_notifiers(
                 self.pool.clone(),
                 self.polling_interval,
+                &*self.blob_store.unwrap(),
                 stop_receiver.clone(),
             ));
             Some(pub_sub)

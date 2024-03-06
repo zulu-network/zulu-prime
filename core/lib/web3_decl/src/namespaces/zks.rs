@@ -5,11 +5,12 @@ use zksync_types::{
     api::{
         BlockDetails, BridgeAddresses, L1BatchDetails, L2ToL1LogProof, Proof, ProtocolVersion,
         TransactionDetails,
-    },
-    fee::Fee,
-    fee_model::FeeParams,
-    transaction_request::CallRequest,
-    Address, L1BatchNumber, MiniblockNumber, H256, U256, U64,
+    }, 
+    fee::Fee, 
+    fee_model::FeeParams, 
+    proof_offchain_verification::OffChainVerificationResult, 
+    transaction_request::CallRequest, 
+    Address, L1BatchNumber, MiniblockNumber, H256, U256, U64
 };
 
 use crate::types::Token;
@@ -118,4 +119,7 @@ pub trait ZksNamespace {
         keys: Vec<H256>,
         l1_batch_number: L1BatchNumber,
     ) -> RpcResult<Proof>;
+
+    #[method(name = "postVerificationRes")]
+    async fn post_verification_result(&self, verify_result: OffChainVerificationResult) -> RpcResult<bool>;
 }

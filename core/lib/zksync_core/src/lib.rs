@@ -400,6 +400,12 @@ pub async fn initialize_components(
         tokio::spawn(circuit_breaker_checker.run(cb_sender, stop_receiver.clone())),
     ];
 
+    let object_store_config = configs
+        .object_store_config
+        .clone()
+        .context("object_store_config")?;
+    let store_factory = ObjectStoreFactory::new(object_store_config);
+
     if components.contains(&Component::WsApi)
         || components.contains(&Component::HttpApi)
         || components.contains(&Component::ContractVerificationApi)
@@ -495,6 +501,7 @@ pub async fn initialize_components(
                 batch_fee_input_provider,
                 connection_pool.clone(),
                 replica_connection_pool.clone(),
+                store_factory.create_store().await,
                 stop_receiver.clone(),
                 storage_caches,
             )
@@ -525,12 +532,6 @@ pub async fn initialize_components(
             tracing::info!("initialized contract verification REST API in {elapsed:?}");
         }
     }
-
-    let object_store_config = configs
-        .object_store_config
-        .clone()
-        .context("object_store_config")?;
-    let store_factory = ObjectStoreFactory::new(object_store_config);
 
     if components.contains(&Component::StateKeeper) {
         let started_at = Instant::now();
@@ -1212,6 +1213,7 @@ async fn run_ws_api(
     batch_fee_model_input_provider: Arc<dyn BatchFeeModelInputProvider>,
     master_connection_pool: ConnectionPool,
     replica_connection_pool: ConnectionPool,
+    object_store: Arc<dyn ObjectStore>,
     stop_receiver: watch::Receiver<bool>,
     storage_caches: PostgresStorageCaches,
 ) -> anyhow::Result<ApiServerHandles> {
@@ -1250,6 +1252,7 @@ async fn run_ws_api(
             .with_tree_api(api_config.web3_json_rpc.tree_api_url())
             .with_tx_sender(tx_sender)
             .with_vm_barrier(vm_barrier)
+            .with_blob_store(object_store)
             .enable_api_namespaces(namespaces);
 
     api_builder
