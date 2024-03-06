@@ -577,12 +577,12 @@ impl EthSubscribe {
 
         let notifier = PubSubNotifier {
             sender: self.logs.clone(),
-            connection_pool,
+            connection_pool: connection_pool.clone(),
             polling_interval,
             events_sender: self.events_sender.clone(),
             blob_store: None,
         };
-        let notifier_task = tokio::spawn(notifier.notify_logs(stop_receiver));
+        let notifier_task = tokio::spawn(notifier.notify_logs(stop_receiver.clone()));
         notifier_tasks.push(notifier_task);
 
         let notifier = PubSubNotifier {
