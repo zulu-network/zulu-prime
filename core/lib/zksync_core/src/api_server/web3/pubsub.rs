@@ -248,14 +248,15 @@ impl PubSubNotifier {
     }
 
     async fn new_l1_batch_proofs(&self) -> anyhow::Result<Vec<bool>> {
-        self.connection_pool
-            .access_storage_tagged("api")
-            .await
-            .context("access_storage_tagged")?
-            .proof_verification_dal()
-            .get_last_l1_batch_verified()
-            .await
-            .context("events_web3_dal().get_all_logs()")
+        // self.connection_pool
+        //     .access_storage_tagged("api")
+        //     .await
+        //     .context("access_storage_tagged")?
+        //     .proof_verification_dal()
+        //     .get_last_l1_batch_verified()
+        //     .await
+        //     .context("events_web3_dal().get_all_logs()")
+        Ok(vec![true, false])
     }
 }
 
