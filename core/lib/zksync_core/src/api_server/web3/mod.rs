@@ -462,7 +462,7 @@ impl ApiServer {
             tasks.extend(pub_sub.spawn_notifiers(
                 self.pool.clone(),
                 self.polling_interval,
-                self.blob_store.unwrap(),
+                self.blob_store.clone(),
                 stop_receiver.clone(),
             ));
             Some(pub_sub)

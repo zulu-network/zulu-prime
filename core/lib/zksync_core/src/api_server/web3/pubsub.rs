@@ -550,7 +550,7 @@ impl EthSubscribe {
         &self,
         connection_pool: ConnectionPool,
         polling_interval: Duration,
-        blob_store: Arc<dyn ObjectStore>,
+        blob_store: Option<Arc<dyn ObjectStore>>,
         stop_receiver: watch::Receiver<bool>,
     ) -> Vec<JoinHandle<anyhow::Result<()>>> {
         let mut notifier_tasks = Vec::with_capacity(3);
@@ -590,7 +590,7 @@ impl EthSubscribe {
             connection_pool,
             polling_interval,
             events_sender: self.events_sender.clone(),
-            blob_store: Some(blob_store),
+            blob_store,
         };
         let notifier_task = tokio::spawn(notifier.notify_l1_batch_proofs(stop_receiver));
         notifier_tasks.push(notifier_task);
