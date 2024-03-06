@@ -1,5 +1,7 @@
 //! (Largely) backend-agnostic logic for dealing with Web3 subscriptions.
 
+use std::sync::Arc;
+
 use anyhow::Context as _;
 use futures::FutureExt;
 use tokio::{
@@ -8,6 +10,7 @@ use tokio::{
     time::{interval, Duration},
 };
 use zksync_dal::ConnectionPool;
+use zksync_object_store::ObjectStore;
 use zksync_types::{L1BatchNumber, MiniblockNumber, H128, H256};
 use zksync_web3_decl::{
     jsonrpsee::{

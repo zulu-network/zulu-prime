@@ -1,6 +1,6 @@
 use std::{collections::HashMap, convert::TryInto};
 
-use anyhow::Context as _;
+use anyhow::Context;
 use zksync_dal::StorageProcessor;
 use zksync_mini_merkle_tree::MiniMerkleTree;
 use zksync_system_constants::DEFAULT_L2_TX_GAS_PER_PUBDATA_BYTE;
@@ -535,12 +535,12 @@ impl ZksNamespace {
     #[tracing::instrument(skip_all)]
     pub async fn post_verification_result_impl(&self, verify_result: OffChainVerificationResult) -> Result<bool, Web3Error> {
         let mut storage = self.access_storage().await?;
-        let l1_batch_number = L1BatchNumber(verify_result.l1_batch_number);
+        let l1_batch_number = L1BatchNumber(verify_result.l1_batch_number as u32);
         storage
             .proof_verification_dal()
             .mark_l1_batch_as_verified(l1_batch_number, verify_result.is_passed)
             .await
-            .map_err(|err| internal_error(METHOD_NAME, err))?;
+            .context("post_verification_result_impl")?;
 
         Ok(true)
     }

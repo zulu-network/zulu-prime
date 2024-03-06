@@ -4,11 +4,7 @@ use zksync_types::{
     api::{
         BlockDetails, BridgeAddresses, L1BatchDetails, L2ToL1LogProof, Proof, ProtocolVersion,
         TransactionDetails,
-    },
-    fee::Fee,
-    fee_model::FeeParams,
-    transaction_request::CallRequest,
-    Address, L1BatchNumber, MiniblockNumber, H256, U256, U64,
+    }, fee::Fee, fee_model::FeeParams, proof_offchain_verification::OffChainVerificationResult, transaction_request::CallRequest, Address, L1BatchNumber, MiniblockNumber, H256, U256, U64
 };
 use zksync_web3_decl::{
     jsonrpsee::core::{async_trait, RpcResult},
@@ -171,6 +167,6 @@ impl ZksNamespaceServer for ZksNamespace {
     async fn post_verification_result(&self, verify_result: OffChainVerificationResult) -> RpcResult<bool> {
         self.post_verification_result_impl(verify_result)
             .await
-            .map_err(into_jsrpc_error)
+            .map_err(|err| self.current_method().map_err(err))
     }
 }
