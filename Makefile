@@ -3,11 +3,11 @@ help: ## Display this help screen
 		-E '^[a-zA-Z_0-9-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-login_db: ## pswd:
+login_db: ## if need use pswd: notsecurepassword
 	@psql -h localhost -U postgres
 
 login_geth: ## enter geth(L1)'s docker bash
-	@docker container exec -it zksync-era-geth-1  geth attach http://localhost:8545
+	@docker container exec -it zulu-prime-geth-1  geth attach http://localhost:8545
 
 fund: ## faught for l1: eth.sendTransaction({from: personal.listAccounts[0], to: "0x618263CE921F7dd5F4f40C29f6c524Aaf97b9bbd", value: "7400000000000000000"})
 	@#eth.sendTransaction({from: personal.listAccounts[0], to: "0x618263CE921F7dd5F4f40C29f6c524Aaf97b9bbd", value: "7400000000000000000"})
