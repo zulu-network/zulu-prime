@@ -1,7 +1,7 @@
 use zksync_types::L1BatchNumber;
 use strum::{Display, EnumString};
 
-use crate::{time_utils::pg_interval_from_duration, SqlxError, StorageProcessor};
+use crate::{instrument::InstrumentExt, time_utils::pg_interval_from_duration, SqlxError, StorageProcessor};
 
 #[derive(Debug, EnumString, Display)]
 enum ProofVerificationStatus {
