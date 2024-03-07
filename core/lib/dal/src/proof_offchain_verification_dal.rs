@@ -1,10 +1,15 @@
+use std::str::FromStr;
+
+use tracing::Instrument;
 use zksync_types::L1BatchNumber;
 use strum::{Display, EnumString};
 
 use crate::{instrument::InstrumentExt, time_utils::pg_interval_from_duration, SqlxError, StorageProcessor};
 
 #[derive(Debug, EnumString, Display)]
-enum ProofVerificationStatus {
+pub enum ProofVerificationStatus {
+    #[strum(serialize = "not_ready")]
+    NotReady,
     #[strum(serialize = "ready_to_be_verified")]
     ReadyToBeVerified,
     #[strum(serialize = "picked_by_offchain_verifier")]
@@ -93,5 +98,25 @@ impl ProofVerificationDal<'_, '_> {
         .await?;
 
         Ok(L1BatchNumber(row.number as u32))
+    }
+
+    pub async fn get_l1_batch_verification_status(&mut self, l1_batch_number: L1BatchNumber) -> sqlx::Result<ProofVerificationStatus> {
+        let row = sqlx::query!(
+            r#"
+            SELECT
+                status
+            FROM
+                proof_offchain_verification_details
+            WHERE
+                l1_batch_number = $1
+            "#,
+            l1_batch_number.0 as i64,
+        )
+        .instrument("get_l1_batch_verification_status")
+        .report_latency()
+        .fetch_optional(self.storage)
+        .await?;
+
+        Ok(row.map_or(ProofVerificationStatus::NotReady, |row| ProofVerificationStatus::from_str(&row.status).unwrap()))
     }
 }
