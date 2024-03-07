@@ -9,7 +9,7 @@ use tokio::{
     task::JoinHandle,
     time::{interval, Duration},
 };
-use zksync_dal::{ConnectionPool, StorageProcessor};
+use zksync_dal::{proof_offchain_verification_dal::ProofVerificationStatus, ConnectionPool, StorageProcessor};
 use zksync_l1_contract_interface::i_executor::methods::ProveBatches;
 use zksync_object_store::{ObjectStore, ObjectStoreError};
 use zksync_prover_interface::outputs::L1BatchProofForL1;
@@ -269,6 +269,14 @@ impl PubSubNotifier {
             .get_last_l1_batch_verified()
             .await?;
         let l1_batch_to_verify = previous_verified_batch_number + 1;
+
+        let status = storage
+            .proof_verification_dal()
+            .get_l1_batch_verification_status(l1_batch_to_verify)
+            .await?;
+        if status != ProofVerificationStatus::ReadyToBeVerified {
+            return Ok(None);
+        }
         
         let mut proofs: Vec<L1BatchProofForL1> = Vec::new();
 
@@ -299,15 +307,20 @@ impl PubSubNotifier {
             });
         let metadata_for_batch_being_proved = storage
             .blocks_dal()
-            .get_l1_batch_metadata(previous_verified_batch_number + 1)
+            .get_l1_batch_metadata(l1_batch_to_verify)
             .await
             .unwrap()
             .unwrap_or_else(|| {
                 panic!(
                     "L1 batch #{} with generated proof is not complete in the DB",
-                    previous_verified_batch_number + 1
+                    l1_batch_to_verify
                 );
             });
+
+        storage
+            .proof_verification_dal()
+            .mark_l1_batch_as_picked(l1_batch_to_verify)
+            .await?;
 
         Ok(Some(ProveBatches {
             prev_l1_batch: previous_proven_batch_metadata,
