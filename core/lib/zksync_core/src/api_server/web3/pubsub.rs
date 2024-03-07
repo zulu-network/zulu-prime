@@ -296,23 +296,25 @@ impl PubSubNotifier {
                 l1_batch_to_verify.0, err
             ),
         }
-        Some(())
-    //     if proofs.is_empty() {
-    //         // The proof for the next L1 batch is not generated yet
-    //         return None;
-    //     }
+        
+        if proofs.is_empty() {
+            // The proof for the next L1 batch is not generated yet
+            return None;
+        }
 
-    //     let previous_proven_batch_metadata = storage
-    //         .blocks_dal()
-    //         .get_l1_batch_metadata(previous_verified_batch_number)
-    //         .await
-    //         .unwrap()
-    //         .unwrap_or_else(|| {
-    //             panic!(
-    //                 "L1 batch #{} with submitted proof is not complete in the DB",
-    //                 previous_verified_batch_number
-    //             );
-    //         });
+        let previous_proven_batch_metadata = storage
+            .blocks_dal()
+            .get_l1_batch_metadata(previous_verified_batch_number)
+            .await
+            .unwrap()
+            .unwrap_or_else(|| {
+                panic!(
+                    "L1 batch #{} with submitted proof is not complete in the DB",
+                    previous_verified_batch_number
+                );
+            });
+
+        Some(())
     //     let metadata_for_batch_being_proved = storage
     //         .blocks_dal()
     //         .get_l1_batch_metadata(previous_verified_batch_number + 1)
