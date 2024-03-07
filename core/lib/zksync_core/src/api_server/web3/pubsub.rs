@@ -313,19 +313,18 @@ impl PubSubNotifier {
                     previous_verified_batch_number
                 );
             });
-
+        let metadata_for_batch_being_proved = storage
+            .blocks_dal()
+            .get_l1_batch_metadata(previous_verified_batch_number + 1)
+            .await
+            .unwrap()
+            .unwrap_or_else(|| {
+                panic!(
+                    "L1 batch #{} with generated proof is not complete in the DB",
+                    previous_verified_batch_number + 1
+                );
+            });
         Some(())
-    //     let metadata_for_batch_being_proved = storage
-    //         .blocks_dal()
-    //         .get_l1_batch_metadata(previous_verified_batch_number + 1)
-    //         .await
-    //         .unwrap()
-    //         .unwrap_or_else(|| {
-    //             panic!(
-    //                 "L1 batch #{} with generated proof is not complete in the DB",
-    //                 previous_proven_batch_number + 1
-    //             );
-    //         });
 
     //     Some(ProveBatches {
     //         prev_l1_batch: previous_proven_batch_metadata,
