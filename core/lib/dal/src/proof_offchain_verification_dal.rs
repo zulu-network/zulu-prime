@@ -92,9 +92,7 @@ impl ProofVerificationDal<'_, '_> {
             ProofVerificationStatus::OffChainVerifyPassed.to_string(),
             ProofVerificationStatus::OffChainVerifyFailed.to_string(),
         )
-        .instrument("get_last_l1_batch_verified")
-        .report_latency()
-        .fetch_one(self.storage)
+        .fetch_one(self.storage.conn())
         .await?;
 
         Ok(L1BatchNumber(row.number as u32))
@@ -112,9 +110,7 @@ impl ProofVerificationDal<'_, '_> {
             "#,
             l1_batch_number.0 as i64,
         )
-        .instrument("get_l1_batch_verification_status")
-        .report_latency()
-        .fetch_optional(self.storage)
+        .fetch_optional(self.storage.conn())
         .await?;
 
         Ok(row.map_or(ProofVerificationStatus::NotReady, |row| ProofVerificationStatus::from_str(&row.status).unwrap()))
