@@ -346,7 +346,7 @@ pub enum PubSubResult {
     Log(Log),
     TxHash(H256),
     Syncing(bool),
-    L1BatchProof(bool),
+    L1BatchProof(Vec<u8>),
 }
 
 #[cfg(test)]

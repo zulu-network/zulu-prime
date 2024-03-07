@@ -1,4 +1,5 @@
 use codegen::serialize_proof;
+use serde::{Deserialize, Serialize};
 use zksync_prover_interface::outputs::L1BatchProofForL1;
 use zksync_types::{
     commitment::L1BatchWithMetadata, ethabi::Token, web3::contract::tokens::Tokenizable, U256,
@@ -7,7 +8,7 @@ use zksync_types::{
 use crate::{i_executor::structures::StoredBatchInfo, Tokenize};
 
 /// Input required to encode `proveBatches` call.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProveBatches {
     pub prev_l1_batch: L1BatchWithMetadata,
     pub l1_batches: Vec<L1BatchWithMetadata>,

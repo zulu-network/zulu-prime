@@ -231,19 +231,17 @@ impl PubSubNotifier {
             timer.tick().await;
 
             let db_latency = PUB_SUB_METRICS.db_poll_latency[&SubscriptionType::L1BatchProofs].start();
-            let new_proofs = self.new_l1_batch_proofs().await?;
+            let new_proof = self.new_l1_batch_proofs().await?;
             db_latency.observe();
 
-            if let Some(last_proof) = new_proofs.last() {
-                let last_batch_number = L1BatchNumber(1);
-                let new_proofs = new_proofs
-                    .into_iter()
-                    .map(PubSubResult::L1BatchProof)
-                    .collect();
-                self.send_pub_sub_results(new_proofs, SubscriptionType::L1BatchProofs);
+            if let Some(new_proof) = new_proof {
+                let proof_bytes = bincode::serialize(&new_proof)?;
+                let proof = PubSubResult::L1BatchProof(proof_bytes);
+                let last_l1_batch_number = new_proof.l1_batches.last().unwrap().header.number;
+                self.send_pub_sub_results(vec![proof], SubscriptionType::L1BatchProofs);
                 self.emit_event(PubSubEvent::L1BatchAdvanced(
                     SubscriptionType::L1BatchProofs,
-                    last_batch_number,
+                    last_l1_batch_number,
                 ));
             }
             self.emit_event(PubSubEvent::NotifyIterationFinished(
@@ -253,19 +251,7 @@ impl PubSubNotifier {
         Ok(())
     }
 
-    async fn new_l1_batch_proofs(&self) -> anyhow::Result<Vec<bool>> {
-        // self.connection_pool
-        //     .access_storage_tagged("api")
-        //     .await
-        //     .context("access_storage_tagged")?
-        //     .proof_verification_dal()
-        //     .get_last_l1_batch_verified()
-        //     .await
-        //     .context("events_web3_dal().get_all_logs()")
-        Ok(vec![true, false])
-    }
-
-    async fn new_l1_batch_proofs_new(&self) -> anyhow::Result<Option<ProveBatches>> {
+    async fn new_l1_batch_proofs(&self) -> anyhow::Result<Option<ProveBatches>> {
         let mut storage = self.connection_pool
             .access_storage_tagged("api")
             .await
