@@ -9,7 +9,7 @@ use tokio::{
     task::JoinHandle,
     time::{interval, Duration},
 };
-use zksync_dal::ConnectionPool;
+use zksync_dal::{ConnectionPool, StorageProcessor};
 use zksync_object_store::ObjectStore;
 use zksync_types::{L1BatchNumber, MiniblockNumber, H128, H256};
 use zksync_web3_decl::{
@@ -273,17 +273,18 @@ impl PubSubNotifier {
 
     // }
 
-    // async fn load_proof_for_offchain_verify(
-    //     storage: &mut StorageProcessor<'_>,
-    //     blob_store: &dyn ObjectStore,
+    async fn load_proof_for_offchain_verify(
+        storage: &mut StorageProcessor<'_>,
+        blob_store: &dyn ObjectStore,
     // ) -> Option<ProveBatches> {
+    ) -> Option<()> {
     //     let previous_verified_batch_number = storage
     //         .proof_verification_dal()
     //         .get_last_l1_batch_verified()
     //         .await
     //         .context("proof_verification_dal().get_last_l1_batch_verified()");
     //     let l1_batch_to_verify = previous_verified_batch_number + 1;
-
+        Some(())
     //     let mut proofs = Vec::new();
 
     //     match blob_store.get(l1_batch_to_verify).await {
@@ -328,7 +329,7 @@ impl PubSubNotifier {
     //         proofs,
     //         should_verify: true,
     //     })
-    // }
+    }
 }
 
 /// Subscription support for Web3 APIs.
