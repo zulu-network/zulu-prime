@@ -10,6 +10,7 @@ use tokio::{
     time::{interval, Duration},
 };
 use zksync_dal::{ConnectionPool, StorageProcessor};
+use zksync_l1_contract_interface::i_executor::methods::ProveBatches;
 use zksync_object_store::{ObjectStore, ObjectStoreError};
 use zksync_prover_interface::outputs::L1BatchProofForL1;
 use zksync_types::{L1BatchNumber, MiniblockNumber, H128, H256};
@@ -277,8 +278,7 @@ impl PubSubNotifier {
     async fn load_proof_for_offchain_verify(
         storage: &mut StorageProcessor<'_>,
         blob_store: &dyn ObjectStore,
-    // ) -> Option<ProveBatches> {
-    ) -> Option<()> {
+    ) -> Option<ProveBatches> {
         let previous_verified_batch_number = storage
             .proof_verification_dal()
             .get_last_l1_batch_verified()
@@ -324,14 +324,13 @@ impl PubSubNotifier {
                     previous_verified_batch_number + 1
                 );
             });
-        Some(())
 
-    //     Some(ProveBatches {
-    //         prev_l1_batch: previous_proven_batch_metadata,
-    //         l1_batches: vec![metadata_for_batch_being_proved],
-    //         proofs,
-    //         should_verify: true,
-    //     })
+        Some(ProveBatches {
+            prev_l1_batch: previous_proven_batch_metadata,
+            l1_batches: vec![metadata_for_batch_being_proved],
+            proofs,
+            should_verify: true,
+        })
     }
 }
 
