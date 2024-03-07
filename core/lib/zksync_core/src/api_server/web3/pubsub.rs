@@ -10,7 +10,7 @@ use tokio::{
     time::{interval, Duration},
 };
 use zksync_dal::{ConnectionPool, StorageProcessor};
-use zksync_object_store::ObjectStore;
+use zksync_object_store::{ObjectStore, ObjectStoreError};
 use zksync_types::{L1BatchNumber, MiniblockNumber, H128, H256};
 use zksync_web3_decl::{
     jsonrpsee::{
@@ -285,18 +285,17 @@ impl PubSubNotifier {
             .unwrap();
         let l1_batch_to_verify = previous_verified_batch_number + 1;
         
-        // let mut proofs = Vec::new();
+        let mut proofs = Vec::new();
 
+        match blob_store.get(l1_batch_to_verify).await {
+            Ok(proof) => proofs.push(proof),
+            Err(ObjectStoreError::KeyNotFound(_)) => return None,
+            Err(err) => panic!(
+                "Failed to load proof for batch {}: {}",
+                l1_batch_to_verify.0, err
+            ),
+        }
         Some(())
-
-    //     match blob_store.get(l1_batch_to_verify).await {
-    //         Ok(proof) => proofs.push(proof),
-    //         Err(ObjectStoreError::KeyNotFound(_)) => return None,
-    //         Err(err) => panic!(
-    //             "Failed to load proof for batch {}: {}",
-    //             l1_batch_to_verify.0, err
-    //         ),
-    //     }
     //     if proofs.is_empty() {
     //         // The proof for the next L1 batch is not generated yet
     //         return None;
