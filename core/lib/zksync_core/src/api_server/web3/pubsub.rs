@@ -278,14 +278,16 @@ impl PubSubNotifier {
         blob_store: &dyn ObjectStore,
     // ) -> Option<ProveBatches> {
     ) -> Option<()> {
-    //     let previous_verified_batch_number = storage
-    //         .proof_verification_dal()
-    //         .get_last_l1_batch_verified()
-    //         .await
-    //         .context("proof_verification_dal().get_last_l1_batch_verified()");
-    //     let l1_batch_to_verify = previous_verified_batch_number + 1;
+        let previous_verified_batch_number = storage
+            .proof_verification_dal()
+            .get_last_l1_batch_verified()
+            .await
+            .unwrap();
+        let l1_batch_to_verify = previous_verified_batch_number + 1;
+        
+        // let mut proofs = Vec::new();
+
         Some(())
-    //     let mut proofs = Vec::new();
 
     //     match blob_store.get(l1_batch_to_verify).await {
     //         Ok(proof) => proofs.push(proof),
