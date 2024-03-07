@@ -265,15 +265,15 @@ impl PubSubNotifier {
         Ok(vec![true, false])
     }
 
-    // async fn new_l1_batch_proofs(&self) -> Option<ProveBatches> {
-    //     let mut storage = self.connection_pool
-    //         .access_storage_tagged("api")
-    //         .await
-    //         .context("access_storage_tagged")?;
-    //     let blob_store = self.blob_store.expect("blob_store not specified");
-    //     Self::load_proof_for_offchain_verify(&mut storage, blob_store)
+    async fn new_l1_batch_proofs_new(&self) -> Option<ProveBatches> {
+        let mut storage = self.connection_pool
+            .access_storage_tagged("api")
+            .await
+            .context("access_storage_tagged")?;
+        let blob_store = self.blob_store.expect("blob_store not specified");
+        Self::load_proof_for_offchain_verify(&mut storage, &*blob_store)
 
-    // }
+    }
 
     async fn load_proof_for_offchain_verify(
         storage: &mut StorageProcessor<'_>,
