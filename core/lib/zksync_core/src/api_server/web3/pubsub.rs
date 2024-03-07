@@ -11,6 +11,7 @@ use tokio::{
 };
 use zksync_dal::{ConnectionPool, StorageProcessor};
 use zksync_object_store::{ObjectStore, ObjectStoreError};
+use zksync_prover_interface::outputs::L1BatchProofForL1;
 use zksync_types::{L1BatchNumber, MiniblockNumber, H128, H256};
 use zksync_web3_decl::{
     jsonrpsee::{
@@ -285,7 +286,7 @@ impl PubSubNotifier {
             .unwrap();
         let l1_batch_to_verify = previous_verified_batch_number + 1;
         
-        let mut proofs = Vec::new();
+        let mut proofs: Vec<L1BatchProofForL1> = Vec::new();
 
         match blob_store.get(l1_batch_to_verify).await {
             Ok(proof) => proofs.push(proof),
