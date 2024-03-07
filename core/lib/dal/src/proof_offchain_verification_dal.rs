@@ -6,7 +6,7 @@ use strum::{Display, EnumString};
 
 use crate::{instrument::InstrumentExt, time_utils::pg_interval_from_duration, SqlxError, StorageProcessor};
 
-#[derive(Debug, EnumString, Display)]
+#[derive(Debug, EnumString, Display, PartialEq, Eq)]
 pub enum ProofVerificationStatus {
     #[strum(serialize = "not_ready")]
     NotReady,
