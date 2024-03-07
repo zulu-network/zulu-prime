@@ -270,7 +270,7 @@ impl PubSubNotifier {
             .access_storage_tagged("api")
             .await
             .context("access_storage_tagged")?;
-        let blob_store = self.blob_store.expect("blob_store not specified");
+        let blob_store = self.blob_store.clone().expect("blob_store not specified");
         Self::load_proof_for_offchain_verify(&mut storage, &*blob_store).await
     }
 
