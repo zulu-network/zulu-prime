@@ -265,32 +265,30 @@ impl PubSubNotifier {
         Ok(vec![true, false])
     }
 
-    async fn new_l1_batch_proofs_new(&self) -> Option<ProveBatches> {
+    async fn new_l1_batch_proofs_new(&self) -> anyhow::Result<Option<ProveBatches>> {
         let mut storage = self.connection_pool
             .access_storage_tagged("api")
             .await
             .context("access_storage_tagged")?;
         let blob_store = self.blob_store.expect("blob_store not specified");
-        Self::load_proof_for_offchain_verify(&mut storage, &*blob_store)
-
+        Self::load_proof_for_offchain_verify(&mut storage, &*blob_store).await
     }
 
     async fn load_proof_for_offchain_verify(
         storage: &mut StorageProcessor<'_>,
         blob_store: &dyn ObjectStore,
-    ) -> Option<ProveBatches> {
+    ) -> anyhow::Result<Option<ProveBatches>> {
         let previous_verified_batch_number = storage
             .proof_verification_dal()
             .get_last_l1_batch_verified()
-            .await
-            .unwrap();
+            .await?;
         let l1_batch_to_verify = previous_verified_batch_number + 1;
         
         let mut proofs: Vec<L1BatchProofForL1> = Vec::new();
 
         match blob_store.get(l1_batch_to_verify).await {
             Ok(proof) => proofs.push(proof),
-            Err(ObjectStoreError::KeyNotFound(_)) => return None,
+            Err(ObjectStoreError::KeyNotFound(_)) => return Ok(None),
             Err(err) => panic!(
                 "Failed to load proof for batch {}: {}",
                 l1_batch_to_verify.0, err
@@ -299,7 +297,7 @@ impl PubSubNotifier {
         
         if proofs.is_empty() {
             // The proof for the next L1 batch is not generated yet
-            return None;
+            return Ok(None);
         }
 
         let previous_proven_batch_metadata = storage
@@ -325,12 +323,12 @@ impl PubSubNotifier {
                 );
             });
 
-        Some(ProveBatches {
+        Ok(Some(ProveBatches {
             prev_l1_batch: previous_proven_batch_metadata,
             l1_batches: vec![metadata_for_batch_being_proved],
             proofs,
             should_verify: true,
-        })
+        }))
     }
 }
 
