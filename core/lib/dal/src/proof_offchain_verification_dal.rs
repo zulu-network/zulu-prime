@@ -64,6 +64,7 @@ impl ProofVerificationDal<'_, '_> {
             UPDATE proof_offchain_verification_details
             SET
                 status = $1,
+                verifier_submit_at = NOW(),
                 updated_at = NOW()
             WHERE
                 l1_batch_number = $2
@@ -88,6 +89,7 @@ impl ProofVerificationDal<'_, '_> {
             UPDATE proof_offchain_verification_details
             SET
                 status = $1,
+                verifier_picked_at = NOW(),
                 updated_at = NOW()
             WHERE
                 l1_batch_number = $2
