@@ -13,6 +13,7 @@ use core::{
 
 use rlp::Rlp;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use zksync_types::L1BatchNumber;
 pub use zksync_types::{
     api::{Block, BlockNumber, Log, TransactionReceipt, TransactionRequest},
     vm_trace::{ContractSourceDebugInfo, VmDebugTrace, VmExecutionStep},
@@ -346,7 +347,13 @@ pub enum PubSubResult {
     Log(Log),
     TxHash(H256),
     Syncing(bool),
-    L1BatchProof(Vec<u8>),
+    L1BatchProof(L1BatchProofForVerify),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct L1BatchProofForVerify {
+    pub l1_batch_number: L1BatchNumber,
+    pub prove_batches_data: Vec<u8>,
 }
 
 #[cfg(test)]

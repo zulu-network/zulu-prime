@@ -22,7 +22,7 @@ use zksync_web3_decl::{
         PendingSubscriptionSink, SendTimeoutError, SubscriptionSink,
     },
     namespaces::EthPubSubServer,
-    types::{BlockHeader, Log, PubSubFilter, PubSubResult},
+    types::{BlockHeader, L1BatchProofForVerify, Log, PubSubFilter, PubSubResult},
 };
 
 use super::{
@@ -236,7 +236,11 @@ impl PubSubNotifier {
 
             if let Some(new_proof) = new_proof {
                 let proof_bytes = bincode::serialize(&new_proof)?;
-                let proof = PubSubResult::L1BatchProof(proof_bytes);
+                let proof = L1BatchProofForVerify {
+                    l1_batch_number: new_proof.prev_l1_batch.header.number + 1,
+                    prove_batches_data: proof_bytes,
+                };
+                let proof = PubSubResult::L1BatchProof(proof);
                 let last_l1_batch_number = new_proof.l1_batches.last().unwrap().header.number;
                 self.send_pub_sub_results(vec![proof], SubscriptionType::L1BatchProofs);
                 self.emit_event(PubSubEvent::L1BatchAdvanced(
