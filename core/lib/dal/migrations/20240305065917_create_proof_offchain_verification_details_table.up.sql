@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS proof_offchain_verification_details
     verifier_picked_at      TIMESTAMP,
     verifier_submit_at      TIMESTAMP,
     created_at              TIMESTAMP NOT NULL,
-    updated_at              TIMESTAMP NOT NULL,
+    updated_at              TIMESTAMP NOT NULL
 );
 
 
