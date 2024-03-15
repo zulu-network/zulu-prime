@@ -261,7 +261,18 @@ impl PubSubNotifier {
             .await
             .context("access_storage_tagged")?;
         let blob_store = self.blob_store.clone().expect("blob_store not specified");
-        Self::load_proof_for_offchain_verify(&mut storage, &*blob_store).await
+        // TODO:
+        // Self::load_proof_for_offchain_verify(&mut storage, &*blob_store).await
+        Self::load_proof_for_offchain_verify_mock(&mut storage, &*blob_store).await
+    }
+
+    async fn load_proof_for_offchain_verify_mock(
+        storage: &mut StorageProcessor<'_>,
+        blob_store: &dyn ObjectStore,
+    ) -> anyhow::Result<Option<ProveBatches>> {
+        let prove_batches_data = std::fs::read("./ProveBatches.bin").unwrap();
+        let prove_batches: ProveBatches = bincode::deserialize(&prove_batches_data).unwrap();
+        Ok(Some(prove_batches))
     }
 
     async fn load_proof_for_offchain_verify(
