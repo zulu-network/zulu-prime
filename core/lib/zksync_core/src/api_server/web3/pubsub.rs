@@ -568,6 +568,8 @@ impl EthSubscribe {
         blob_store: Option<Arc<dyn ObjectStore>>,
         stop_receiver: watch::Receiver<bool>,
     ) -> Vec<JoinHandle<anyhow::Result<()>>> {
+        tracing::debug!("start spawn_notifiers");
+
         let mut notifier_tasks = Vec::with_capacity(3);
 
         let notifier = PubSubNotifier {
