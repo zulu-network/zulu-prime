@@ -222,7 +222,9 @@ impl PubSubNotifier {
     }
 
     async fn notify_l1_batch_proofs(self, stop_receiver: watch::Receiver<bool>) -> anyhow::Result<()> {
-        let mut timer = interval(self.polling_interval);
+        // TODO:
+        let mut timer = interval(Duration::from_secs(60));
+        // let mut timer = interval(self.polling_interval);
         loop {
             if *stop_receiver.borrow() {
                 tracing::info!("Stop signal received, pubsub_l1batch_proofs_notifier is shutting down");
