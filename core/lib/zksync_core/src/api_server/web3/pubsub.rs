@@ -270,7 +270,11 @@ impl PubSubNotifier {
         storage: &mut StorageProcessor<'_>,
         blob_store: &dyn ObjectStore,
     ) -> anyhow::Result<Option<ProveBatches>> {
-        let prove_batches_data = std::fs::read("./ProveBatches.bin").unwrap();
+        tracing::debug!("start read mock proof bin file");
+        let zksync_home = std::env::var("ZKSYNC_HOME").unwrap_or_else(|_| ".".into());
+        let bin_path = format!("{}/core/lib/zksync_core/src/api_server/web3/ProveBatches.bin", zksync_home);
+        let prove_batches_data = std::fs::read(bin_path).unwrap();
+        tracing::debug!("read mock proof bin file successfully");
         let prove_batches: ProveBatches = bincode::deserialize(&prove_batches_data).unwrap();
         Ok(Some(prove_batches))
     }
