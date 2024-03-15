@@ -50,7 +50,7 @@ export PATH=$ZKSYNC_HOME/bin:$PATH
 ### Run Sequencer
 ```bash
 # 1. start geth,postgres
-zk init
+make init
 
 # 2.start sequencer
 make start_server
