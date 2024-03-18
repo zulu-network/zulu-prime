@@ -1,4 +1,5 @@
 use super::BlockDetailsBase;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use zksync_basic_types::L1BatchNumber;
 
