@@ -1,10 +1,12 @@
 use std::str::FromStr;
 
-use tracing::Instrument;
-use zksync_types::L1BatchNumber;
 use strum::{Display, EnumString};
+use tracing::Instrument;
+use zksync_types::{api::proof_offchain_verification::OffChainVerificationDetails, L1BatchNumber};
 
-use crate::{instrument::InstrumentExt, time_utils::pg_interval_from_duration, SqlxError, StorageProcessor};
+use crate::{
+    instrument::InstrumentExt, time_utils::pg_interval_from_duration, SqlxError, StorageProcessor,
+};
 
 #[derive(Debug, EnumString, Display, PartialEq, Eq)]
 pub enum ProofVerificationStatus {
@@ -124,7 +126,10 @@ impl ProofVerificationDal<'_, '_> {
         Ok(L1BatchNumber(row.number as u32))
     }
 
-    pub async fn get_l1_batch_verification_status(&mut self, l1_batch_number: L1BatchNumber) -> sqlx::Result<ProofVerificationStatus> {
+    pub async fn get_l1_batch_verification_status(
+        &mut self,
+        l1_batch_number: L1BatchNumber,
+    ) -> sqlx::Result<ProofVerificationStatus> {
         let row = sqlx::query!(
             r#"
             SELECT
@@ -139,6 +144,33 @@ impl ProofVerificationDal<'_, '_> {
         .fetch_optional(self.storage.conn())
         .await?;
 
-        Ok(row.map_or(ProofVerificationStatus::NotReady, |row| ProofVerificationStatus::from_str(&row.status).unwrap()))
+        Ok(row.map_or(ProofVerificationStatus::NotReady, |row| {
+            ProofVerificationStatus::from_str(&row.status).unwrap()
+        }))
+    }
+
+    pub async fn get_l1_batch_verification_details(
+        &mut self,
+        l1_batch_number: L1BatchNumber,
+    ) -> sqlx::Result<OffChainVerificationDetails> {
+        let row: Option<StorageProofOffchainVerification> = sqlx::query_as!(
+            StorageProofOffchainVerification,
+            r#"
+            SELECT
+                l1_batch_number, status, verifier_picked_at, verifier_submit_at
+            FROM
+                proof_offchain_verification_details
+            WHERE
+                l1_batch_number = $1
+            "#,
+            l1_batch_number.0 as i64,
+        )
+        .instrument("get_l1_batch_verification_details")
+        .with_arg("l1_batch_number", &l1_batch_number)
+        .report_latency()
+        .fetch_optional(self.storage)
+        .await?;
+
+        Ok(row.map(Into::into))
     }
 }

@@ -9,7 +9,9 @@ use tokio::{
     task::JoinHandle,
     time::{interval, Duration},
 };
-use zksync_dal::{proof_offchain_verification_dal::ProofVerificationStatus, ConnectionPool, StorageProcessor};
+use zksync_dal::{
+    proof_offchain_verification_dal::ProofVerificationStatus, ConnectionPool, StorageProcessor,
+};
 use zksync_l1_contract_interface::i_executor::methods::ProveBatches;
 use zksync_object_store::{ObjectStore, ObjectStoreError};
 use zksync_prover_interface::outputs::L1BatchProofForL1;
@@ -221,18 +223,24 @@ impl PubSubNotifier {
             .context("events_web3_dal().get_all_logs()")
     }
 
-    async fn notify_l1_batch_proofs(self, stop_receiver: watch::Receiver<bool>) -> anyhow::Result<()> {
+    async fn notify_l1_batch_proofs(
+        self,
+        stop_receiver: watch::Receiver<bool>,
+    ) -> anyhow::Result<()> {
         // TODO:
         let mut timer = interval(Duration::from_secs(60));
         // let mut timer = interval(self.polling_interval);
         loop {
             if *stop_receiver.borrow() {
-                tracing::info!("Stop signal received, pubsub_l1batch_proofs_notifier is shutting down");
+                tracing::info!(
+                    "Stop signal received, pubsub_l1batch_proofs_notifier is shutting down"
+                );
                 break;
             }
             timer.tick().await;
 
-            let db_latency = PUB_SUB_METRICS.db_poll_latency[&SubscriptionType::L1BatchProofs].start();
+            let db_latency =
+                PUB_SUB_METRICS.db_poll_latency[&SubscriptionType::L1BatchProofs].start();
             let new_proof = self.new_l1_batch_proofs().await?;
             db_latency.observe();
 
@@ -258,7 +266,8 @@ impl PubSubNotifier {
     }
 
     async fn new_l1_batch_proofs(&self) -> anyhow::Result<Option<ProveBatches>> {
-        let mut storage = self.connection_pool
+        let mut storage = self
+            .connection_pool
             .access_storage_tagged("api")
             .await
             .context("access_storage_tagged")?;
@@ -274,7 +283,10 @@ impl PubSubNotifier {
     ) -> anyhow::Result<Option<ProveBatches>> {
         tracing::debug!("start read mock proof bin file");
         let zksync_home = std::env::var("ZKSYNC_HOME").unwrap_or_else(|_| ".".into());
-        let bin_path = format!("{}/core/lib/zksync_core/src/api_server/web3/ProveBatches.bin", zksync_home);
+        let bin_path = format!(
+            "{}/core/lib/zksync_core/src/api_server/web3/ProveBatches.bin",
+            zksync_home
+        );
         let prove_batches_data = std::fs::read(bin_path).unwrap();
         tracing::debug!("read mock proof bin file successfully");
         let prove_batches: ProveBatches = bincode::deserialize(&prove_batches_data).unwrap();
@@ -298,7 +310,7 @@ impl PubSubNotifier {
         if status != ProofVerificationStatus::ReadyToBeVerified {
             return Ok(None);
         }
-        
+
         let mut proofs: Vec<L1BatchProofForL1> = Vec::new();
 
         match blob_store.get(l1_batch_to_verify).await {
@@ -309,7 +321,7 @@ impl PubSubNotifier {
                 l1_batch_to_verify.0, err
             ),
         }
-        
+
         if proofs.is_empty() {
             // The proof for the next L1 batch is not generated yet
             return Ok(None);

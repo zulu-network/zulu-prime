@@ -16,6 +16,7 @@ use crate::{
         storage_block::{
             bind_block_where_sql_params, web3_block_number_to_sql, web3_block_where_sql,
             ResolvedL1BatchForMiniblock, StorageBlockDetails, StorageL1BatchDetails,
+            StorageL1BatchDetailsWithOffchainVerification,
         },
         storage_transaction::{extract_web3_transaction, web3_transaction_select_sql, CallTrace},
     },
@@ -640,6 +641,82 @@ impl BlocksWeb3Dal<'_, '_> {
         .report_latency()
         .fetch_optional(self.storage)
         .await?;
+
+        Ok(l1_batch_details.map(Into::into))
+    }
+
+    pub async fn get_l1_batch_details_with_offchain_verification(
+        &mut self,
+        l1_batch_number: L1BatchNumber,
+    ) -> sqlx::Result<
+        Option<api::proof_offchain_verification::L1BatchDetailsWithOffchainVerification>,
+    > {
+        // todo-paul: add verifedAt
+        // select another table.
+        let l1_batch_details: Option<StorageL1BatchDetailsWithOffchainVerification> =
+            sqlx::query_as!(
+                StorageL1BatchDetailsWithOffchainVerification,
+                r#"
+            WITH
+                mb AS (
+                    SELECT
+                        l1_gas_price,
+                        l2_fair_gas_price
+                    FROM
+                        miniblocks
+                    WHERE
+                        l1_batch_number = $1
+                    LIMIT
+                        1
+                )
+            SELECT
+                l1_batches.number,
+                l1_batches.timestamp,
+                l1_batches.l1_tx_count,
+                l1_batches.l2_tx_count,
+                l1_batches.hash AS "root_hash?",
+                commit_tx.tx_hash AS "commit_tx_hash?",
+                commit_tx.confirmed_at AS "committed_at?",
+                prove_tx.tx_hash AS "prove_tx_hash?",
+                prove_tx.confirmed_at AS "proven_at?",
+                execute_tx.tx_hash AS "execute_tx_hash?",
+                execute_tx.confirmed_at AS "executed_at?",
+                mb.l1_gas_price,
+                mb.l2_fair_gas_price,
+                l1_batches.bootloader_code_hash,
+                l1_batches.default_aa_code_hash,
+                offchain_verfication.status AS "offchain_verfication_status"
+                offchain_verfication.verifier_picked_at AS "offchain_verifier_picked_at"
+                offchain_verfication.verifier_submit_at AS "offchain_verifier_submit_at"
+            FROM
+                l1_batches
+                INNER JOIN mb ON TRUE
+                LEFT JOIN eth_txs_history AS commit_tx ON (
+                    l1_batches.eth_commit_tx_id = commit_tx.eth_tx_id
+                    AND commit_tx.confirmed_at IS NOT NULL
+                )
+                LEFT JOIN eth_txs_history AS prove_tx ON (
+                    l1_batches.eth_prove_tx_id = prove_tx.eth_tx_id
+                    AND prove_tx.confirmed_at IS NOT NULL
+                )
+                LEFT JOIN eth_txs_history AS execute_tx ON (
+                    l1_batches.eth_execute_tx_id = execute_tx.eth_tx_id
+                    AND execute_tx.confirmed_at IS NOT NULL
+                )
+                LEFT JOIN proof_offchain_verification_details AS offchain_verfication ON (
+                    l1_batches.number = offchain_verfication.l1_batch_number
+                    AND offchain_verfication.l1_batch_number IS NOT NULL
+                )
+            WHERE
+                l1_batches.number = $1
+            "#,
+                l1_batch_number.0 as i64
+            )
+            .instrument("get_l1_batch_details_with_offchain_verification")
+            .with_arg("l1_batch_number", &l1_batch_number)
+            .report_latency()
+            .fetch_optional(self.storage)
+            .await?;
 
         Ok(l1_batch_details.map(Into::into))
     }

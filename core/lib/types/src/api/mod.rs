@@ -18,6 +18,7 @@ use crate::{
 };
 
 pub mod en;
+pub mod proof_offchain_verification;
 
 /// Block Number
 #[derive(Copy, Clone, Debug, PartialEq, Display)]

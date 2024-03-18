@@ -2,9 +2,16 @@ use std::collections::HashMap;
 
 use zksync_types::{
     api::{
+        proof_offchain_verification::{
+            L1BatchDetailsWithOffchainVerification, OffChainVerificationResult,
+        },
         BlockDetails, BridgeAddresses, L1BatchDetails, L2ToL1LogProof, Proof, ProtocolVersion,
         TransactionDetails,
-    }, fee::Fee, fee_model::FeeParams, proof_offchain_verification::OffChainVerificationResult, transaction_request::CallRequest, Address, L1BatchNumber, MiniblockNumber, H256, U256, U64
+    },
+    fee::Fee,
+    fee_model::FeeParams,
+    transaction_request::CallRequest,
+    Address, L1BatchNumber, MiniblockNumber, H256, U256, U64,
 };
 use zksync_web3_decl::{
     jsonrpsee::core::{async_trait, RpcResult},
@@ -130,6 +137,15 @@ impl ZksNamespaceServer for ZksNamespace {
             .map_err(|err| self.current_method().map_err(err))
     }
 
+    async fn get_l1_batch_details_with_offchain_verification(
+        &self,
+        batch_number: L1BatchNumber,
+    ) -> RpcResult<Option<L1BatchDetailsWithOffchainVerification>> {
+        self.get_l1_batch_details_with_offchain_verification_impl(batch_number)
+            .await
+            .map_err(|err| self.current_method().map_err(err))
+    }
+
     async fn get_bytecode_by_hash(&self, hash: H256) -> RpcResult<Option<Vec<u8>>> {
         self.get_bytecode_by_hash_impl(hash)
             .await
@@ -164,7 +180,10 @@ impl ZksNamespaceServer for ZksNamespace {
             .map_err(|err| self.current_method().map_err(err))
     }
 
-    async fn post_verification_result(&self, verify_result: OffChainVerificationResult) -> RpcResult<bool> {
+    async fn post_verification_result(
+        &self,
+        verify_result: OffChainVerificationResult,
+    ) -> RpcResult<bool> {
         self.post_verification_result_impl(verify_result)
             .await
             .map_err(|err| self.current_method().map_err(err))

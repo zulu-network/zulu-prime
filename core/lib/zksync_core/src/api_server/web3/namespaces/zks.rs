@@ -6,6 +6,9 @@ use zksync_mini_merkle_tree::MiniMerkleTree;
 use zksync_system_constants::DEFAULT_L2_TX_GAS_PER_PUBDATA_BYTE;
 use zksync_types::{
     api::{
+        proof_offchain_verification::{
+            L1BatchDetailsWithOffchainVerification, OffChainVerificationResult,
+        },
         BlockDetails, BridgeAddresses, GetLogsFilter, L1BatchDetails, L2ToL1LogProof, Proof,
         ProtocolVersion, StorageProof, TransactionDetails,
     },
@@ -14,7 +17,6 @@ use zksync_types::{
     l1::L1Tx,
     l2::L2Tx,
     l2_to_l1_log::{l2_to_l1_logs_tree_size, L2ToL1Log},
-    proof_offchain_verification::OffChainVerificationResult,
     tokens::ETHEREUM_ADDRESS,
     transaction_request::CallRequest,
     utils::storage_key_for_standard_token_balance,
@@ -533,15 +535,32 @@ impl ZksNamespace {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn post_verification_result_impl(&self, verify_result: OffChainVerificationResult) -> Result<bool, Web3Error> {
+    pub async fn post_verification_result_impl(
+        &self,
+        verify_result: OffChainVerificationResult,
+    ) -> Result<bool, Web3Error> {
         let mut storage = self.access_storage().await?;
         let l1_batch_number = L1BatchNumber(verify_result.l1_batch_number as u32);
         storage
             .proof_verification_dal()
             .mark_l1_batch_as_verified(l1_batch_number, verify_result.is_passed)
             .await
-            .context("post_verification_result_impl")?;
+            .context("mark_l1_batch_as_verified")?;
 
         Ok(true)
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub async fn get_l1_batch_details_with_offchain_verification_impl(
+        &self,
+        batch_number: L1BatchNumber,
+    ) -> Result<Option<L1BatchDetailsWithOffchainVerification>, Web3Error> {
+        self.state.start_info.ensure_not_pruned(batch_number)?;
+        let mut storage = self.access_storage().await?;
+        Ok(storage
+            .blocks_web3_dal()
+            .get_l1_batch_details_with_offchain_verification(batch_number)
+            .await
+            .context("get_l1_batch_details_with_offchain_verification")?)
     }
 }

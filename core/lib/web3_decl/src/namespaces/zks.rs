@@ -3,14 +3,16 @@ use std::collections::HashMap;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use zksync_types::{
     api::{
+        proof_offchain_verification::{
+            L1BatchDetailsWithOffchainVerification, OffChainVerificationResult,
+        },
         BlockDetails, BridgeAddresses, L1BatchDetails, L2ToL1LogProof, Proof, ProtocolVersion,
         TransactionDetails,
-    }, 
-    fee::Fee, 
-    fee_model::FeeParams, 
-    proof_offchain_verification::OffChainVerificationResult, 
-    transaction_request::CallRequest, 
-    Address, L1BatchNumber, MiniblockNumber, H256, U256, U64
+    },
+    fee::Fee,
+    fee_model::FeeParams,
+    transaction_request::CallRequest,
+    Address, L1BatchNumber, MiniblockNumber, H256, U256, U64,
 };
 
 use crate::types::Token;
@@ -121,5 +123,14 @@ pub trait ZksNamespace {
     ) -> RpcResult<Proof>;
 
     #[method(name = "postVerificationRes")]
-    async fn post_verification_result(&self, verify_result: OffChainVerificationResult) -> RpcResult<bool>;
+    async fn post_verification_result(
+        &self,
+        verify_result: OffChainVerificationResult,
+    ) -> RpcResult<bool>;
+
+    #[method(name = "getL1BatchDetailsWithOffchainVerification")]
+    async fn get_l1_batch_details_with_offchain_verification(
+        &self,
+        batch: L1BatchNumber,
+    ) -> RpcResult<Option<L1BatchDetailsWithOffchainVerification>>;
 }
