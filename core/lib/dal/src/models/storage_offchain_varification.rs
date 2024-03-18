@@ -21,8 +21,8 @@ use zksync_types::{
 pub struct StorageProofOffchainVerification {
     pub l1_batch_number: i64,
     pub status: String,
-    pub verifier_picked_at: NaiveDateTime,
-    pub verifier_submit_at: NaiveDateTime,
+    pub verifier_picked_at: Option<NaiveDateTime>,
+    pub verifier_submit_at: Option<NaiveDateTime>,
 }
 
 impl From<StorageProofOffchainVerification>
@@ -31,7 +31,7 @@ impl From<StorageProofOffchainVerification>
     fn from(details: StorageProofOffchainVerification) -> Self {
         api::proof_offchain_verification::OffChainVerificationDetails {
             l1_batch_number: details.l1_batch_number as u64,
-            status: details.status, // Here we just return the string.
+            verifier_status: details.status, // Here we just return the string.
             verifier_picked_at: details
                 .verifier_picked_at
                 .map(|committed_at| DateTime::<Utc>::from_naive_utc_and_offset(committed_at, Utc)),
@@ -62,8 +62,8 @@ pub struct StorageL1BatchDetailsWithOffchainVerification {
     pub default_aa_code_hash: Option<Vec<u8>>,
     // Below are offchain_verfication fields
     pub offchain_verfication_status: String,
-    pub offchain_verifier_picked_at: NaiveDateTime,
-    pub offchain_verifier_submit_at: NaiveDateTime,
+    pub offchain_verifier_picked_at: Option<NaiveDateTime>,
+    pub offchain_verifier_submit_at: Option<NaiveDateTime>,
 }
 
 impl From<StorageL1BatchDetailsWithOffchainVerification>
@@ -112,8 +112,8 @@ impl From<StorageL1BatchDetailsWithOffchainVerification>
         };
 
         let offchain_verification = api::proof_offchain_verification::OffChainVerificationDetails {
-            l1_batch_number: details.number as u64,
-            status: details.offchain_verfication_status, // Here we just return the string.
+            l1_batch_number: L1BatchNumber(details.number as u32),
+            verifier_status: details.offchain_verfication_status, // Here we just return the string.
             verifier_picked_at: details
                 .offchain_verifier_picked_at
                 .map(|committed_at| DateTime::<Utc>::from_naive_utc_and_offset(committed_at, Utc)),

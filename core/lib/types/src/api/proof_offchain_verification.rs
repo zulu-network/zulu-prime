@@ -12,10 +12,10 @@ pub struct OffChainVerificationResult {
 #[derive(Default, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OffChainVerificationDetails {
-    pub l1_batch_number: u64,
-    pub status: String,
-    pub verifier_picked_at: DateTime<Utc>,
-    pub verifier_submit_at: DateTime<Utc>,
+    pub l1_batch_number: L1BatchNumber,
+    pub verifier_status: String,
+    pub verifier_picked_at: Option<DateTime<Utc>>,
+    pub verifier_submit_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,6 +24,5 @@ pub struct L1BatchDetailsWithOffchainVerification {
     pub number: L1BatchNumber,
     #[serde(flatten)]
     pub base: BlockDetailsBase,
-    #[serde(flatten)]
     pub offchain_verification: OffChainVerificationDetails,
 }
