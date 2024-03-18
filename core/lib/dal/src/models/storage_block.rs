@@ -93,7 +93,7 @@ fn convert_l2_to_l1_logs(raw_logs: Vec<Vec<u8>>) -> Vec<L2ToL1Log> {
 }
 
 // TODO (SMA-1635): Make these fields non optional in database
-fn convert_base_system_contracts_hashes(
+pub(crate) fn convert_base_system_contracts_hashes(
     bootloader_code_hash: Option<Vec<u8>>,
     default_aa_code_hash: Option<Vec<u8>>,
 ) -> BaseSystemContractsHashes {

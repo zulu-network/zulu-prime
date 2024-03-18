@@ -16,8 +16,8 @@ use crate::{
         storage_block::{
             bind_block_where_sql_params, web3_block_number_to_sql, web3_block_where_sql,
             ResolvedL1BatchForMiniblock, StorageBlockDetails, StorageL1BatchDetails,
-            StorageL1BatchDetailsWithOffchainVerification,
         },
+        storage_offchain_varification::StorageL1BatchDetailsWithOffchainVerification,
         storage_transaction::{extract_web3_transaction, web3_transaction_select_sql, CallTrace},
     },
     StorageProcessor,

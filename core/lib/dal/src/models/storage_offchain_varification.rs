@@ -1,5 +1,6 @@
 use std::{convert::TryInto, str::FromStr};
 
+use crate::models::storage_block::convert_base_system_contracts_hashes;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use sqlx::{
     postgres::{PgArguments, Postgres},
