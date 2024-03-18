@@ -30,7 +30,7 @@ impl From<StorageProofOffchainVerification>
 {
     fn from(details: StorageProofOffchainVerification) -> Self {
         api::proof_offchain_verification::OffChainVerificationDetails {
-            l1_batch_number: L1BatchNumber(details.number as u32),
+            l1_batch_number: L1BatchNumber(details.l1_batch_number as u32),
             verifier_status: details.status, // Here we just return the string.
             verifier_picked_at: details
                 .verifier_picked_at

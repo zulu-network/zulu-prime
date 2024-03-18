@@ -5,7 +5,9 @@ use tracing::Instrument;
 use zksync_types::{api::proof_offchain_verification::OffChainVerificationDetails, L1BatchNumber};
 
 use crate::{
-    instrument::InstrumentExt, time_utils::pg_interval_from_duration, SqlxError, StorageProcessor,
+    instrument::InstrumentExt,
+    models::storage_offchain_varification::StorageProofOffchainVerification,
+    time_utils::pg_interval_from_duration, SqlxError, StorageProcessor,
 };
 
 #[derive(Debug, EnumString, Display, PartialEq, Eq)]

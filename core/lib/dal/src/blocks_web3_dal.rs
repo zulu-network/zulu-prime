@@ -683,9 +683,9 @@ impl BlocksWeb3Dal<'_, '_> {
                 mb.l2_fair_gas_price,
                 l1_batches.bootloader_code_hash,
                 l1_batches.default_aa_code_hash,
-                offchain_verfication.status AS "offchain_verfication_status"
-                offchain_verfication.verifier_picked_at AS "offchain_verifier_picked_at?"
-                offchain_verfication.verifier_submit_at AS "offchain_verifier_submit_at?"
+                offchain_verfication.status AS "offchain_verfication_status",
+                offchain_verfication.verifier_picked_at AS "offchain_verifier_picked_at?",
+                offchain_verfication.verifier_submit_at AS "offchain_verifier_submit_at?",
             FROM
                 l1_batches
                 INNER JOIN mb ON TRUE
