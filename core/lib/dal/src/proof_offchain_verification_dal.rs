@@ -168,7 +168,7 @@ impl ProofVerificationDal<'_, '_> {
             l1_batch_number.0 as i64,
         )
         .fetch_one(self.storage.conn())
-        .await?;
+        .await;
 
         Ok(row.map(Into::into))
     }
