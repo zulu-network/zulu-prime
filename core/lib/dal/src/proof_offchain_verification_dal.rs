@@ -45,12 +45,12 @@ impl ProofVerificationDal<'_, '_> {
             block_number.0 as i64,
             ProofVerificationStatus::ReadyToBeVerified.to_string(),
         )
-        .execute(self.storage.conn())
-        .await?
-        .rows_affected()
-        .eq(&1)
-        .then_some(())
-        .ok_or(sqlx::Error::RowNotFound)
+            .execute(self.storage.conn())
+            .await?
+            .rows_affected()
+            .eq(&1)
+            .then_some(())
+            .ok_or(sqlx::Error::RowNotFound)
     }
 
     pub async fn mark_l1_batch_as_verified(
@@ -154,7 +154,7 @@ impl ProofVerificationDal<'_, '_> {
     pub async fn get_l1_batch_verification_details(
         &mut self,
         l1_batch_number: L1BatchNumber,
-    ) -> sqlx::Result<Option<OffChainVerificationDetails>> {
+    ) -> sqlx::Result<OffChainVerificationDetails> {
         let row: StorageProofOffchainVerification = sqlx::query_as!(
             StorageProofOffchainVerification,
             r#"
