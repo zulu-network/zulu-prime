@@ -155,7 +155,7 @@ impl ProofVerificationDal<'_, '_> {
         &mut self,
         l1_batch_number: L1BatchNumber,
     ) -> sqlx::Result<Option<OffChainVerificationDetails>> {
-        let row: Option<StorageProofOffchainVerification> = sqlx::query_as!(
+        let row: StorageProofOffchainVerification = sqlx::query_as!(
             StorageProofOffchainVerification,
             r#"
             SELECT
@@ -168,8 +168,8 @@ impl ProofVerificationDal<'_, '_> {
             l1_batch_number.0 as i64,
         )
         .fetch_one(self.storage.conn())
-        .await;
+        .await?;
 
-        Ok(row.map(Into::into))
+        Ok(row.into())
     }
 }
