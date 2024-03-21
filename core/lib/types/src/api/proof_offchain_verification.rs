@@ -25,5 +25,6 @@ pub struct L1BatchDetailsWithOffchainVerification {
     pub number: L1BatchNumber,
     #[serde(flatten)]
     pub base: BlockDetailsBase,
+    #[serde(flatten)]
     pub offchain_verification: OffChainVerificationDetails,
 }
