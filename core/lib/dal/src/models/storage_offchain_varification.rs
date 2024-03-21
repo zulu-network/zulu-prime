@@ -1,6 +1,7 @@
 use std::{convert::TryInto, str::FromStr};
 
 use crate::models::storage_block::convert_base_system_contracts_hashes;
+use crate::proof_offchain_verification_dal::ProofVerificationStatus;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use sqlx::{
     postgres::{PgArguments, Postgres},
@@ -62,7 +63,8 @@ pub struct StorageL1BatchDetailsWithOffchainVerification {
     pub bootloader_code_hash: Option<Vec<u8>>,
     pub default_aa_code_hash: Option<Vec<u8>>,
     // Below are offchain_verfication fields
-    pub offchain_verfication_status: String,
+    // for `offchain_verfication_status`: only after proof generated, it has status
+    pub offchain_verfication_status: Option<String>,
     pub offchain_verifier_picked_at: Option<NaiveDateTime>,
     pub offchain_verifier_submit_at: Option<NaiveDateTime>,
 }
@@ -114,7 +116,11 @@ impl From<StorageL1BatchDetailsWithOffchainVerification>
 
         let offchain_verification = api::proof_offchain_verification::OffChainVerificationDetails {
             l1_batch_number: L1BatchNumber(details.number as u32),
-            verifier_status: details.offchain_verfication_status, // Here we just return the string.
+            verifier_status: if let Some(status) = details.offchain_verfication_status {
+                status
+            } else {
+                ProofVerificationStatus::NotReady.to_string()
+            }, // Here we just return the string.
             verifier_picked_at: details
                 .offchain_verifier_picked_at
                 .map(|committed_at| DateTime::<Utc>::from_naive_utc_and_offset(committed_at, Utc)),
