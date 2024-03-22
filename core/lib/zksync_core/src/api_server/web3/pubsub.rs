@@ -295,7 +295,8 @@ impl PubSubNotifier {
             .proof_verification_dal()
             .get_l1_batch_verification_status(l1_batch_to_verify)
             .await?;
-        if status != ProofVerificationStatus::ReadyToBeVerified {
+        if status != ProofVerificationStatus::ReadyToBeVerified &&
+           status != ProofVerificationStatus::PickedByOffChainVerifier {
             return Ok(None);
         }
         
