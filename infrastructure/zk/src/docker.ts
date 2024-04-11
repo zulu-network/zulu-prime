@@ -16,9 +16,10 @@ const IMAGES = [
     'witness-vector-generator',
     'prover-fri-gateway',
     'proof-fri-compressor',
-    'snapshots-creator'
+    'snapshots-creator',
+    "build-base"
 ];
-
+// TODO
 const DOCKER_REGISTRIES = ['us-docker.pkg.dev/matterlabs-infra/matterlabs-docker', 'matterlabs'];
 
 const UNIX_TIMESTAMP = Date.now();
@@ -29,7 +30,7 @@ async function dockerCommand(
     platform: string = '',
     customTag?: string,
     buildExtraArgs: string = '',
-    dockerOrg: string = 'matterlabs'
+    dockerOrg: string = 'zulunetwork'
 ) {
     // Generating all tags for containers. We need 2 tags here: SHA and SHA+TS
     const { stdout: COMMIT_SHORT_SHA }: { stdout: string } = await utils.exec('git rev-parse --short HEAD');
@@ -79,7 +80,8 @@ function defaultTagList(image: string, imageTagSha: string, imageTagShaTS: strin
         'witness-vector-generator',
         'prover-fri-gateway',
         'proof-fri-compressor',
-        'snapshots-creator'
+        'snapshots-creator',
+        'build-base'
     ].includes(image)
         ? ['latest', 'latest2.0', `2.0-${imageTagSha}`, `${imageTagSha}`, `2.0-${imageTagShaTS}`, `${imageTagShaTS}`]
         : [`latest2.0`, 'latest'];
