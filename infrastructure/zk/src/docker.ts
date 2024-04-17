@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import {Command} from 'commander';
 import * as utils from './utils';
 
 const IMAGES = [
@@ -19,7 +19,7 @@ const IMAGES = [
     'snapshots-creator'
 ];
 // TODO
-const DOCKER_REGISTRIES = ['us-docker.pkg.dev/matterlabs-infra/matterlabs-docker', 'matterlabs'];
+const DOCKER_REGISTRIES = ['zulunetwork'];
 
 const UNIX_TIMESTAMP = Date.now();
 
@@ -32,7 +32,7 @@ async function dockerCommand(
     dockerOrg: string = 'zulunetwork'
 ) {
     // Generating all tags for containers. We need 2 tags here: SHA and SHA+TS
-    const { stdout: COMMIT_SHORT_SHA }: { stdout: string } = await utils.exec('git rev-parse --short HEAD');
+    const {stdout: COMMIT_SHORT_SHA}: { stdout: string } = await utils.exec('git rev-parse --short HEAD');
     // COMMIT_SHORT_SHA returns with newline, so we need to trim it
     const imageTagShaTS: string = process.env.IMAGE_TAG_SUFFIX
         ? process.env.IMAGE_TAG_SUFFIX
@@ -81,7 +81,7 @@ function defaultTagList(image: string, imageTagSha: string, imageTagShaTS: strin
         'proof-fri-compressor',
         'snapshots-creator'
     ].includes(image)
-        ? ['latest', 'latest2.0', `2.0-${imageTagSha}`, `${imageTagSha}`, `2.0-${imageTagShaTS}`, `${imageTagShaTS}`]
+        ? ['latest2.0', `${imageTagSha}`]
         : [`latest2.0`, 'latest'];
 
     return tagList;
