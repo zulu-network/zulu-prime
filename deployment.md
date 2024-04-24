@@ -1,9 +1,11 @@
 # Deploy
 
 ## Local Deploy
+
 Build and deploy with the source code
 
 ### Setup
+
 ```bash
 # Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -14,10 +16,10 @@ sudo apt-get install build-essential pkg-config cmake clang lldb lld libssl-dev 
 sudo snap install solc
 
 ## TO install docker's docker-compose-plugin
-sudo apt-get update 
+sudo apt-get update
 sudo apt-get install docker-compose-plugin # meet error's to see Unbuntu Env
 
-# Docker    
+# Docker
 ## sudo usermod -aG docker YOUR_USER # Add current user to docker group
 sudo usermod -aG docker ${USER}
 
@@ -41,13 +43,15 @@ sudo systemctl start docker
 export ZKSYNC_HOME=$(pwd)
 
 # Or add this on /etc/profile
-export ZKSYNC_HOME=/path/to/zksync/repo/you/cloned 
+export ZKSYNC_HOME=/path/to/zksync/repo/you/cloned
 export PATH=$ZKSYNC_HOME/bin:$PATH
 
 ```
 
 ### Run locally
+
 ### Run Sequencer
+
 ```bash
 # 1. start geth,postgres
 zk init
@@ -57,8 +61,9 @@ make start_server
 ```
 
 ### Run Prover
+
 ```bash
-cd prover 
+cd prover
 # 0. setup first: generate related key. It's might takes 2 hours.
 make start_prover_setup
 
@@ -76,7 +81,6 @@ make start_prover_agg
 
 ```
 
-
-
 ## Decker Deploy
+
 TODO

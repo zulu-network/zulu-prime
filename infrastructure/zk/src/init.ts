@@ -153,7 +153,7 @@ export interface InitArgs {
     };
 }
 
-const DEFAULT_ARGS: InitArgs = {
+export const DEFAULT_ARGS: InitArgs = {
     skipSubmodulesCheckout: false,
     skipEnvSetup: false,
     governorPrivateKeyArgs: [],

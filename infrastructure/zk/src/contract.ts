@@ -1,7 +1,12 @@
-import { Command } from 'commander';
+import {Command} from 'commander';
 import * as utils from './utils';
 import * as env from './env';
 import fs from 'fs';
+import * as run from './run';
+import * as compiler from './compiler';
+import * as db from './database';
+import {clean} from './clean';
+import {announced, InitArgs, DEFAULT_ARGS} from './init';
 
 export async function build() {
     await utils.spawn('yarn l1-contracts build');
@@ -149,6 +154,40 @@ export async function redeployL1(args: any[]) {
     await verifyL1Contracts();
 }
 
+export async function init(initArgs: InitArgs = DEFAULT_ARGS) {
+    const {
+        skipSubmodulesCheckout,
+        skipEnvSetup,
+        testTokens,
+        governorPrivateKeyArgs,
+        deployerPrivateKeyArgs,
+        deployerL2ContractInput
+    } = initArgs;
+
+    await announced('Compiling JS packages', run.yarn());
+    await announced('Compile l2 system contracts', compiler.compileAll());
+    await announced('Building contracts', build());
+    if (testTokens.deploy) {
+        await announced('Deploying localhost L1 ERC20 tokens', run.deployERC20('dev', '', '', '', testTokens.args));
+    }
+    await announced('Deploying L1 verifier', deployVerifier(deployerPrivateKeyArgs));
+    await announced('Deploying L1 bridge contracts', redeployL1(deployerPrivateKeyArgs));
+    await announced('Initializing L1 validator', initializeValidator(governorPrivateKeyArgs));
+    await announced(
+        'Deploying L2 contracts',
+        deployL2(
+            deployerL2ContractInput.args,
+            deployerL2ContractInput.includePaymaster,
+            deployerL2ContractInput.includeL2WETH
+        )
+    );
+
+    if (deployerL2ContractInput.includeL2WETH) {
+        await announced('Initializing L2 WETH token', initializeWethToken(governorPrivateKeyArgs));
+    }
+    await announced('Initializing L1 governance', initializeGovernance(governorPrivateKeyArgs));
+}
+
 export async function deployVerifier(args: any[]) {
     await deployL1([...args, '--only-verifier']);
 }
@@ -164,3 +203,4 @@ command.command('deploy [deploy-opts...]').allowUnknownOption(true).description(
 command.command('build').description('build contracts').action(build);
 command.command('initialize-validator').description('initialize validator').action(initializeValidator);
 command.command('verify').description('verify L1 contracts').action(verifyL1Contracts);
+command.command('init').description('init contracts for nodes, aka. contracts deployer').action(init);
