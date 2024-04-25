@@ -200,7 +200,10 @@ pub async fn is_genesis_needed(postgres_config: &PostgresConfig) -> bool {
     let pool = ConnectionPool::singleton(db_url)
         .build()
         .await
-        .expect("failed to build connection_pool");
+        .expect(&format!(
+            "failed to build connection_pool {}",
+            db_url.to_string()
+        ));
     let mut storage = pool.access_storage().await.expect("access_storage()");
     storage.blocks_dal().is_genesis_needed().await.unwrap()
 }

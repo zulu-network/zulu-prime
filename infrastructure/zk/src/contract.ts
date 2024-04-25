@@ -1,12 +1,12 @@
-import {Command} from 'commander';
+import { Command } from 'commander';
 import * as utils from './utils';
 import * as env from './env';
 import fs from 'fs';
 import * as run from './run';
 import * as compiler from './compiler';
 import * as db from './database';
-import {clean} from './clean';
-import {announced, InitArgs, DEFAULT_ARGS} from './init';
+import { clean } from './clean';
+import { announced, InitArgs, DEFAULT_ARGS } from './init';
 
 export async function build() {
     await utils.spawn('yarn l1-contracts build');
@@ -167,7 +167,7 @@ export async function init(initArgs: InitArgs = DEFAULT_ARGS) {
     await announced('Compiling JS packages', run.yarn());
     await announced('Compile l2 system contracts', compiler.compileAll());
     await announced('Building contracts', build());
-    if (testTokens.deploy) {
+    if (true) {
         await announced('Deploying localhost L1 ERC20 tokens', run.deployERC20('dev', '', '', '', testTokens.args));
     }
     await announced('Deploying L1 verifier', deployVerifier(deployerPrivateKeyArgs));
@@ -203,4 +203,18 @@ command.command('deploy [deploy-opts...]').allowUnknownOption(true).description(
 command.command('build').description('build contracts').action(build);
 command.command('initialize-validator').description('initialize validator').action(initializeValidator);
 command.command('verify').description('verify L1 contracts').action(verifyL1Contracts);
-command.command('init').description('init contracts for nodes, aka. contracts deployer').action(init);
+export const initCommand = new Command('init')
+    .option('--skip-submodules-checkout')
+    .option('--skip-env-setup')
+    .description('init contracts for nodes, aka. contracts deployer')
+    .action(async (cmd: Command) => {
+        const initArgs: InitArgs = {
+            skipSubmodulesCheckout: cmd.skipSubmodulesCheckout,
+            skipEnvSetup: cmd.skipEnvSetup,
+            governorPrivateKeyArgs: [],
+            deployerL2ContractInput: { args: [], includePaymaster: true, includeL2WETH: true },
+            testTokens: { deploy: true, args: [] },
+            deployerPrivateKeyArgs: []
+        };
+        await init(initArgs);
+    });
