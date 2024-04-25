@@ -1,4 +1,5 @@
 use std::env;
+
 use zksync_config::configs::{object_store::ObjectStoreMode, FriProverConfig, ObjectStoreConfig};
 use zksync_dal::fri_proof_compressor_dal::FriProofCompressorDal;
 use zksync_object_store::{bincode, ObjectStoreFactory};

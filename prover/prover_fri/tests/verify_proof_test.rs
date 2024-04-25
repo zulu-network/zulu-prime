@@ -1,20 +1,19 @@
-use std::fs;
-use std::sync::Arc;
+use std::{fs, sync::Arc};
+
+use anyhow::Context as _;
 use zkevm_test_harness::prover_utils::{verify_base_layer_proof, verify_recursion_layer_proof};
+use zksync_config::configs::{object_store::ObjectStoreMode, FriProverConfig, ObjectStoreConfig};
+use zksync_object_store::{bincode, ObjectStoreFactory};
+use zksync_prover_fri::prover_job_processor::Prover;
 use zksync_prover_fri_types::{
     circuit_definitions::boojum::cs::implementations::{pow::NoPow, proof::Proof},
     keys::FriCircuitKey,
-    CircuitWrapper, CircuitWrapper, ProverJob, ProverServiceDataKey,
+    CircuitWrapper, ProverJob, ProverServiceDataKey,
 };
 use zksync_types::{
     basic_fri_types::{AggregationRound, CircuitIdRoundTuple},
     L1BatchNumber,
 };
-
-use anyhow::Context as _;
-use zksync_config::configs::{object_store::ObjectStoreMode, FriProverConfig, ObjectStoreConfig};
-use zksync_object_store::{bincode, ObjectStoreFactory};
-use zksync_prover_fri::prover_job_processor::Prover;
 
 #[tokio::test]
 async fn test_load_and_verify_schedule_proof() {

@@ -203,9 +203,8 @@ command.command('deploy [deploy-opts...]').allowUnknownOption(true).description(
 command.command('build').description('build contracts').action(build);
 command.command('initialize-validator').description('initialize validator').action(initializeValidator);
 command.command('verify').description('verify L1 contracts').action(verifyL1Contracts);
-export const initCommand = new Command('init')
-    .option('--skip-submodules-checkout')
-    .option('--skip-env-setup')
+command
+    .command('init')
     .description('init contracts for nodes, aka. contracts deployer')
     .action(async (cmd: Command) => {
         const initArgs: InitArgs = {

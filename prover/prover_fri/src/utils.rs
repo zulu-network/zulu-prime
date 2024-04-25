@@ -199,8 +199,9 @@ pub fn get_setup_data_key(key: ProverServiceDataKey) -> ProverServiceDataKey {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs;
+
+    use super::*;
 
     #[test]
     fn test_get_setup_data_key_for_node_agg_key() {
