@@ -28,7 +28,11 @@ init: ## clean and init the server
 	@zk && zk clean --all && zk init
 
 start_server: ## start sequencer.
-	@nohup zk server --components=api,tree,eth,state_keeper,housekeeper,proof_data_handler,basic_witness_input_producer,commitment_generator >  $(server_log_file) 2>&1 &
+	@nohup zk server --components=api,tree,eth,state_keeper,housekeeper,proof_data_handler  >  $(server_log_file) 2>&1 &
 	@echo "output logs to $(server_log_file)"
+
+# todo
+# start_api
+# verifier_api
 
 .PHONY: clippy fmt test
