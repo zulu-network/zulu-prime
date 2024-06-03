@@ -5,10 +5,10 @@
 network="localhost"
 # Name of current zkSync network
 # Used for Sentry environment
-zksync_network="ZuluPrime devnet"
+zksync_network="ZuluPrime testnet-beta"
 # ID of current zkSync network treated as ETH network ID.
 # Used to distinguish zkSync from other Web3-capable networks.
-zksync_network_id=202401
+zksync_network_id=202406
 
 [chain.state_keeper]
 fee_account_addr="0xde03a0B5963f75f1C8485B355fF6D30f3093BDE7"
@@ -99,7 +99,7 @@ delay_interval=100
 [chain.mempool]
 delay_interval=100
 sync_interval_ms=10
-sync_batch_size = 1000
+sync_batch_size=1000
 capacity=10_000_000
 stuck_tx_timeout=86400 # 1 day in seconds
 remove_stuck_txs=true
