@@ -55,6 +55,7 @@ mod storage_dal;
 pub mod storage_logs_dal;
 pub mod storage_logs_dedup_dal;
 pub mod storage_web3_dal;
+pub mod submit_proof_dal;
 pub mod sync_dal;
 pub mod system_dal;
 pub mod time_utils;

@@ -1,10 +1,11 @@
 //! Tree updater trait and its implementations.
 
-use std::{ops, sync::Arc, time::Instant};
+use std::{io::Read, ops, sync::Arc, time::Instant};
 
 use anyhow::Context as _;
 use futures::{future, FutureExt};
 use tokio::sync::watch;
+use zksync_crypto::hasher::{sha256::Sha256Hasher, Hasher};
 use zksync_dal::{ConnectionPool, StorageProcessor};
 use zksync_health_check::HealthUpdater;
 use zksync_merkle_tree::domain::TreeMetadata;
@@ -138,6 +139,22 @@ impl TreeUpdater {
             // metadata already exists; instead, it'll check that the old and new metadata match.
             // That is, if we run multiple tree instances, we'll get metadata correspondence
             // right away without having to implement dedicated code.
+
+            // TODO: change the code when real proof generated!
+            // Mock the proof and save (proof, vk, public_input, proof_id) in database.
+            // Submit the proof tuple to Fiamma.
+            const BITVM_PROOF_SYSTEM: &str = "GROTH16_BN254_BITVM";
+            let location = std::path::Path::new("etc/prover-test-data");
+            let proof_file = location.with_file_name("proof.bitvm");
+            let public_input_file = location.with_file_name("public_input.bitvm");
+            let vk_file = location.with_file_name("vk.bitvm");
+            let proof_system = hex::encode(BITVM_PROOF_SYSTEM);
+            let proof = hex::encode(std::fs::read(&proof_file).unwrap());
+            let public_input = hex::encode(std::fs::read(&public_input_file).unwrap());
+            let vk = hex::encode(std::fs::read(&vk_file).unwrap());
+            let all_data = format!("{}{}{}{}", proof_system, proof, public_input, vk);
+            let hasher = Sha256Hasher {};
+            let proof_id = hex::encode(hasher.hash_bytes(all_data.as_bytes()));
 
             if let Some(object_key) = &object_key {
                 storage
@@ -338,4 +355,26 @@ impl TreeUpdater {
             "Leaf indices are not consistent for L1 batch {l1_batch_number}"
         );
     }
+}
+
+#[test]
+fn foo() {
+    // cargo test --package zksync_core --lib -- metadata_calculator::updater::foo --exact --show-output
+    const BITVM_PROOF_SYSTEM: &str = "GROTH16_BN254_BITVM";
+    let location = std::path::Path::new("etc/prover-test-data");
+    let proof_file = location.with_file_name("proof.bitvm");
+    let public_input_file = location.with_file_name("public_input.bitvm");
+    let vk_file = location.with_file_name("vk.bitvm");
+    let proof_system = hex::encode(BITVM_PROOF_SYSTEM);
+    let proof = hex::encode(std::fs::read(&proof_file).unwrap());
+    let public_input = hex::encode(std::fs::read(&public_input_file).unwrap());
+    let vk = hex::encode(std::fs::read(&vk_file).unwrap());
+    let all_data = format!("{}{}{}{}", proof_system, proof, public_input, vk);
+    let hasher = Sha256Hasher {};
+    let proof_id = hex::encode(hasher.hash_bytes(all_data.as_bytes()));
+    println!(
+        "{} proof_id: {}",
+        std::env::current_dir().unwrap().display(),
+        proof_id
+    );
 }
