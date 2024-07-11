@@ -10,10 +10,12 @@ pub struct SubmitProofDal<'a, 'c> {
 impl SubmitProofDal<'_, '_> {
     pub async fn insert_proof_submition(&mut self, bp: BitvmProof) {
         sqlx::query!(
-            "INSERT INTO submit_proof (
-                l1_batch_number, proof, vk, public_input, \
-                proof_id, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, now(), now())",
+            r#"
+            INSERT INTO
+                submit_proof (l1_batch_number, proof, vk, public_input, proof_id, created_at, updated_at)
+            VALUES
+                ($1, $2, $3, $4, $5, NOW(), NOW())
+            "#,
             bp.number.0 as i64,
             bp.proof,
             bp.vk,
@@ -30,7 +32,14 @@ impl SubmitProofDal<'_, '_> {
         l1_batch_number: L1BatchNumber,
     ) -> Option<String> {
         let row = sqlx::query!(
-            "SELECT proof_id FROM submit_proof WHERE l1_batch_number = $1",
+            r#"
+            SELECT
+                proof_id
+            FROM
+                submit_proof
+            WHERE
+                l1_batch_number = $1
+            "#,
             l1_batch_number.0 as i64
         )
         .fetch_one(self.storage.conn())
