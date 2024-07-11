@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT proof_id FROM submit_proof WHERE l1_batch_number = $1",
+  "query": "\n            SELECT\n                proof_id\n            FROM\n                submit_proof\n            WHERE\n                l1_batch_number = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       false
     ]
   },
-  "hash": "d62534e515e04d255688543b5c6af899b9dbcd4779b7c3a9c29668cbcffc8277"
+  "hash": "9e6628a5c1ad4d09b9d5d298dd99fd87cde850e488e2ed40b5af6eabb7d83f82"
 }
